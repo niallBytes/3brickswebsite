@@ -6,6 +6,11 @@ import {
   ArrowRight, ArrowUpRight, Check, Instagram, Facebook, Youtube,
   Phone, Mail, MapPin, Star, Menu, X, MessageCircle, Move, Sparkles
 } from 'lucide-react'
+import SiteChrome from '@/components/SiteChrome'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
+import LeadForm from '@/components/LeadForm'
+import { useQuiz } from '@/components/QuizProvider'
 
 const IMG = {
   studio: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80',
@@ -980,45 +985,32 @@ function WhatsApp() {
 
 function App() {
   const [loaded, setLoaded] = useState(false)
+  const { openQuiz } = useQuiz()
 
-  useEffect(() => {
-    let lenis; let raf
-    ;(async () => {
-      const mod = await import('lenis')
-      const Lenis = mod.default
-      lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true })
-      const loop = (time) => { lenis.raf(time); raf = requestAnimationFrame(loop) }
-      raf = requestAnimationFrame(loop)
-    })()
-    return () => { if (lenis) lenis.destroy(); if (raf) cancelAnimationFrame(raf) }
-  }, [])
-
-  const scrollToContact = useCallback(() => {
-    const el = document.getElementById('contact')
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
+  // Any CTA on the page routes to the estimate quiz \u2014 the highest-value flow.
+  const onCta = useCallback(() => openQuiz('homepage_cta'), [openQuiz])
 
   return (
-    <div className="bg-cream text-[#1E1E1E]">
-      <AnimatePresence>{!loaded && <Loader onDone={() => setLoaded(true)} />}</AnimatePresence>
-      <CustomCursor />
-      <ScrollIndicator />
-      <Navbar onCta={scrollToContact} />
-      <Hero onCta={scrollToContact} />
-      <Marquee />
-      <StudioStatement />
-      <ServicesSticky />
-      <StatsBand />
-      <PortfolioHorizontal />
-      <Process />
-      <BeforeAfterSection />
-      <Testimonials />
-      <AreasSection />
-      <Pricing onCta={scrollToContact} />
-      <Contact />
-      <Footer />
-      <WhatsApp />
-    </div>
+    <SiteChrome>
+      <div className="bg-cream text-[#1E1E1E]">
+        <AnimatePresence>{!loaded && <Loader onDone={() => setLoaded(true)} />}</AnimatePresence>
+        <ScrollIndicator />
+        <SiteNav />
+        <Hero onCta={onCta} />
+        <Marquee />
+        <StudioStatement />
+        <ServicesSticky />
+        <StatsBand />
+        <PortfolioHorizontal />
+        <Process />
+        <BeforeAfterSection />
+        <Testimonials />
+        <AreasSection />
+        <Pricing onCta={onCta} />
+        <Contact />
+        <SiteFooter />
+      </div>
+    </SiteChrome>
   )
 }
 

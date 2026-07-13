@@ -108,28 +108,245 @@ user_problem_statement: |
   Backend: MongoDB leads collection with rate limit, honeypot, admin listing at /admin protected by ADMIN_PASSWORD env var.
 
 backend:
-  - task: "POST /api/leads — save lead with validation, honeypot, rate limit (3/hr/IP)"
+  - task: "GET /api/ — health check endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Endpoint accepts JSON {name, phone, project_type, area, budget, website(honeypot)}. Validates required fields, phone format, honeypot silently returns ok. Rate limits 3 per IP per hour. Stores in 'leads' collection with UUID id, created_at, ip."
-  - task: "GET /api/admin/leads?password=... — list leads (protected)"
+          comment: "Returns {message: 'You First API', ok: true} with 200 status."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Health check returns correct response with 200 status."
+  
+  - task: "POST /api/leads — full quiz with estimate calculation"
     implemented: true
-    working: "NA"
+    working: true
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Returns 401 if password wrong/missing. Returns leads sorted desc by created_at. ADMIN_PASSWORD env var = youfirst2025."
+          comment: "Accepts full quiz payload with bhk_type, budget_range, scope_items. Calculates estimate server-side using calculateEstimate() from lib/quiz.js. Returns estimate object with {min, max, packageTier}."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Full quiz lead with 2BHK, 10-15L budget, 3 scope items correctly calculated estimate: min=1310000, max=1760000, tier=premium. Matches expected calculation."
+  
+  - task: "POST /api/leads — mini form without quiz fields"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Accepts minimal payload {name, phone, email, area, source}. Saves lead without estimate when bhk_type/budget_range missing."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Mini form lead saved successfully with estimate=null as expected."
+  
+  - task: "POST /api/leads — honeypot validation"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Hidden 'website' field acts as honeypot. If filled, returns ok:true but does NOT save to database."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Honeypot correctly returns ok:true without saving lead when website field is filled."
+  
+  - task: "POST /api/leads — phone number validation"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Validates phone format with regex /^\\+?[0-9\\-\\s]{8,15}$/. Returns 400 with error message if invalid."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Invalid phone 'abc' correctly rejected with 400 status and error message."
+  
+  - task: "POST /api/leads — required field validation"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Requires name and phone fields. Returns 400 with 'Missing name or phone' if either is missing."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Missing name correctly rejected with 400 status and error message."
+  
+  - task: "POST /api/leads — rate limiting (5/hr/IP)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IP-based rate limit: 5 submissions per hour per IP. Returns 429 'Too many submissions' when exceeded."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Rate limit correctly triggers 429 on 6th request (limit is 5/hr/IP)."
+  
+  - task: "POST /api/guide-downloads — free guide capture"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Accepts {name, phone, email}. Creates UUID, stores in guide_downloads collection. Returns {ok:true, download:{id, name, phone, email, created_at}}."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Guide download created successfully with UUID and all fields returned."
+  
+  - task: "POST /api/referrals — create referral link"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Accepts {referrer_name, referrer_phone}. Generates unique_code from name + random (e.g., NIALLXXXX). Stores in referrals collection with clicks=0, conversions=0."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Referral created with code 'NIALLTESZM3Y' containing name prefix as expected."
+  
+  - task: "POST /api/referrals/{code}/click — track referral clicks"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Increments clicks count for referral with matching unique_code. Returns {ok:true, referrer_name}. Returns 404 if code not found."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Referral click tracked successfully, clicks count incremented to 1, verified via admin endpoint."
+  
+  - task: "GET /api/admin/stats — dashboard statistics"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Protected by ADMIN_PASSWORD. Returns {total, month, newLeads, guidesMonth, scheduledToday, bySource[{source, count}]}. Aggregates leads by source for current month."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Admin stats returns all required fields: total=5, month=5, sources=3. bySource array populated correctly."
+  
+  - task: "GET /api/admin/stats — authentication protection"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Checks password via query param or X-Admin-Password header. Returns 401 if missing or incorrect."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Admin stats without password correctly returns 401 Unauthorized."
+  
+  - task: "GET /api/admin/leads — list leads with filters"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Protected endpoint. Supports filters: status, area, bhk, search (name/phone/email regex), pagination (page, perPage=20). Returns {leads[], total, page, perPage}."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. All filters working: status=new (2 leads), area=Baner (2 leads), search=Rohan (2 leads found). Pagination structure correct."
+  
+  - task: "PATCH /api/admin/leads/{id} — update lead status/notes"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Protected endpoint. Updates lead by UUID id. Accepts {status, notes}. Returns {ok:true}."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Lead status updated from 'new' to 'called' with notes 'Rang once'. Verified via subsequent GET request."
+  
+  - task: "GET /api/admin/guide-downloads — list guide downloads"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Protected endpoint. Returns {downloads[]} sorted by created_at desc, limit 1000."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Admin guide downloads returns 1 download including test entry 'Guide Test User'."
+  
+  - task: "GET /api/admin/referrals — list referrals"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Protected endpoint. Returns {referrals[]} with clicks and conversions counts, sorted by created_at desc, limit 1000."
+        - working: true
+          agent: "testing"
+          comment: "✅ Test passed. Admin referrals returns 1 referral with test entry showing 1 click as expected."
 
 frontend:
   - task: "Full landing page with cinematic scroll animations"
@@ -158,13 +375,11 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "POST /api/leads — save lead with validation, honeypot, rate limit (3/hr/IP)"
-    - "GET /api/admin/leads?password=... — list leads (protected)"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -172,3 +387,7 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Full MVP built. Please test /api/leads happy path, missing fields, invalid phone, honeypot (silent ok when website field set), rate limit (4th submission from same IP within an hour returns 429). Also /api/admin/leads with correct/incorrect password (correct=youfirst2025). All routes are catch-all under /api/[[...path]]/route.js."
+    - agent: "main"
+      message: "MASSIVE expansion complete. Added: 12-step Estimate Quiz (POST /api/leads with all quiz fields returns estimate), Guide downloads (POST /api/guide-downloads), Referrals (POST /api/referrals + POST /api/referrals/[code]/click), Admin stats (GET /api/admin/stats), Admin lead status update (PATCH /api/admin/leads/[id]), Admin guide downloads (GET /api/admin/guide-downloads), Admin referrals (GET /api/admin/referrals), Admin lead filters (status/area/bhk/search/pagination). Rate limit raised to 5/hr/IP. Please retest all endpoints and the new ones. ADMIN_PASSWORD=youfirst2025."
+    - agent: "testing"
+      message: "✅ COMPREHENSIVE BACKEND TESTING COMPLETE. All 18 test cases PASSED (19 assertions total). Tested: health check, full quiz estimate calculation, mini form, honeypot, phone validation, required fields, rate limiting (5/hr/IP), guide downloads, referral creation & click tracking, admin stats (with/without auth), admin leads filters (status/area/search), lead status updates, admin guide downloads, admin referrals. NO CRITICAL ISSUES FOUND. All endpoints working as expected. Rate limit correctly triggers at 5 requests/hr/IP. Estimate calculation accurate (2BHK premium with 3 addons = min:1310000, max:1760000). All admin endpoints properly protected with password. All filters and search working correctly."
