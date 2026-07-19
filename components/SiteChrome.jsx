@@ -13,9 +13,12 @@ import ExitIntent from './ExitIntent'
 import WhatsAppButton from './WhatsAppButton'
 
 // Reusable smooth cursor — same look/behaviour as before, in a shared spot.
+// Adds `on-dark` variant automatically when hovering elements marked
+// data-cursor-theme="dark" (used on the footer + hero + charcoal sections).
 function CustomCursor() {
   const ref = useRef(null)
   const [state, setState] = useState('')
+  const [onDark, setOnDark] = useState(false)
   const [label, setLabel] = useState('View')
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -33,15 +36,20 @@ function CustomCursor() {
     window.addEventListener('mousemove', move); raf = requestAnimationFrame(loop)
     const over = (e) => {
       const t = e.target.closest('[data-cursor]')
-      if (!t) { setState(''); return }
-      const c = t.getAttribute('data-cursor')
-      setLabel(t.getAttribute('data-cursor-label') || 'View')
-      setState(c === 'image' ? 'hover-image' : 'hover-link')
+      if (t) {
+        const c = t.getAttribute('data-cursor')
+        setLabel(t.getAttribute('data-cursor-label') || 'View')
+        setState(c === 'image' ? 'hover-image' : 'hover-link')
+      } else {
+        setState('')
+      }
+      const dark = e.target.closest('[data-cursor-theme="dark"]')
+      setOnDark(!!dark)
     }
     document.addEventListener('mouseover', over)
     return () => { window.removeEventListener('mousemove', move); document.removeEventListener('mouseover', over); cancelAnimationFrame(raf) }
   }, [])
-  return <div ref={ref} className={`yf-cursor ${state}`}><span className="label">{label}</span></div>
+  return <div ref={ref} className={`yf-cursor ${state} ${onDark ? 'on-dark' : ''}`}><span className="label">{label}</span></div>
 }
 
 export default function SiteChrome({ children }) {

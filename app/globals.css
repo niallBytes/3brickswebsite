@@ -52,10 +52,10 @@ html.lenis { height: auto; }
   border: 1.5px solid #1E1E1E;
   border-radius: 9999px;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 100000;
   transform: translate(-50%, -50%);
-  mix-blend-mode: difference;
-  transition: width .25s ease, height .25s ease, background-color .25s ease, border-color .25s ease;
+  mix-blend-mode: normal;
+  transition: width .25s ease, height .25s ease, background-color .25s ease, border-color .25s ease, color .25s ease;
   display: flex; align-items: center; justify-content: center;
   color: #F8F5F0;
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
@@ -64,6 +64,9 @@ html.lenis { height: auto; }
 .yf-cursor.hover-image { width: 90px; height: 90px; background: #F47B20; border-color: #F47B20; }
 .yf-cursor .label { opacity: 0; }
 .yf-cursor.hover-image .label { opacity: 1; }
+/* Light variant used when hovering over dark surfaces like the footer or dark hero */
+.yf-cursor.on-dark { border-color: #F8F5F0; background: transparent; color: #F8F5F0; }
+.yf-cursor.on-dark.hover-link { background: #F8F5F0; border-color: #F8F5F0; }
 
 /* Utilities */
 .font-serif-display { font-family: var(--font-serif), 'Cormorant Garamond', serif; font-weight: 500; letter-spacing: -0.01em; }

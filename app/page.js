@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowRight, ArrowUpRight, Check, Instagram, Facebook, Youtube,
+  ArrowRight, ArrowUpRight, ArrowLeft, Check, Instagram, Facebook, Youtube,
   Phone, Mail, MapPin, Star, Menu, X, MessageCircle, Move, Sparkles
 } from 'lucide-react'
 import SiteChrome from '@/components/SiteChrome'
@@ -11,6 +13,10 @@ import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import LeadForm from '@/components/LeadForm'
 import { useQuiz } from '@/components/QuizProvider'
+import { AREA_PAGES } from '@/lib/content'
+
+// Slug map \u2014 area display name \u2192 URL slug. Only include areas with pages.
+const AREA_SLUG_MAP = AREA_PAGES.reduce((acc, a) => { acc[a.name] = a.slug; return acc }, {})
 
 const IMG = {
   studio: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80',
@@ -203,9 +209,10 @@ function Navbar({ onCta }) {
 }
 
 /* Hero */
-function Hero({ onCta }) {
+function Hero() {
+  const router = useRouter()
   return (
-    <section id="top" className="relative h-[100svh] w-full overflow-hidden bg-[#1E1E1E] text-cream">
+    <section id="top" data-cursor-theme="dark" className="relative h-[100svh] w-full overflow-hidden bg-[#1E1E1E] text-cream">
       <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline
         poster="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80">
         <source src={HERO_VIDEO} type="video/mp4" />
@@ -223,7 +230,7 @@ function Hero({ onCta }) {
           Boutique interior design for Pune's new homeowners. Personal. Precise. On time.
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 1.5 }}>
-          <MagneticButton onClick={onCta} className="mt-10 bg-[#F47B20] text-white rounded-full px-8 py-4 min-h-[48px] text-sm md:text-base tracking-wide hover:bg-[#D9631A] w-[85vw] max-w-xs md:w-auto">
+          <MagneticButton onClick={() => router.push('/design-ideas')} className="mt-10 bg-[#F47B20] text-white rounded-full px-8 py-4 min-h-[48px] text-sm md:text-base tracking-wide hover:bg-[#D9631A] w-[85vw] max-w-xs md:w-auto">
             Explore Our Work <ArrowRight className="ml-2 h-4 w-4" />
           </MagneticButton>
         </motion.div>
@@ -253,24 +260,12 @@ function ScrollIndicator() {
   )
 }
 
-/* Marquee — seamless infinite scroll (2 copies + -50% keyframe = zero gap) */
+/* Marquee — replaced with a clean static single-line info ticker (no animation). */
 function Marquee() {
-  const items = ['You First', 'Interior Design', 'Pune', 'Residential', 'Commercial', 'Government Projects', 'Baner', 'Wakad', 'Kharadi', 'Hinjewadi']
-  const Line = ({ ariaHidden = false }) => (
-    <div className="flex items-center shrink-0" aria-hidden={ariaHidden}>
-      {items.map((t, i) => (
-        <span key={i} className="flex items-center pr-8 md:pr-14">
-          <span className="font-serif-display italic text-3xl md:text-6xl whitespace-nowrap">{t}</span>
-          <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#F47B20] ml-8 md:ml-14" />
-        </span>
-      ))}
-    </div>
-  )
   return (
-    <div className="overflow-hidden py-6 md:py-8 bg-[#1E1E1E] text-cream">
-      <div className="marquee-track">
-        <Line />
-        <Line ariaHidden />
+    <div data-cursor-theme="dark" className="bg-[#1E1E1E] text-cream/85 py-4 px-6">
+      <div className="max-w-[1400px] mx-auto text-center truncate" style={{ fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        Interior Design · Pune · Residential · Commercial · Government Projects · Baner · Wakad · Kharadi · Hinjewadi
       </div>
     </div>
   )
@@ -279,6 +274,7 @@ function Marquee() {
 /* Studio */
 function StudioStatement() {
   const imgRef = useRef(null)
+  const router = useRouter()
   const [inView, setInView] = useState(false)
   useEffect(() => {
     const io = new IntersectionObserver(([e]) => e.isIntersecting && setInView(true), { threshold: 0.2 })
@@ -289,11 +285,11 @@ function StudioStatement() {
     <section id="about" className="py-24 md:py-40 px-6 md:px-10 bg-cream">
       <div className="max-w-[1400px] mx-auto grid md:grid-cols-12 gap-10 md:gap-16 items-start">
         <div className="md:col-span-5" ref={imgRef}>
-          <div className="relative aspect-[3/4] overflow-hidden">
+          <div className="relative aspect-[3/4] overflow-hidden cursor-pointer" onClick={() => router.push('/design-ideas')}>
             <motion.img src={IMG.studio} alt="Interior" className="absolute inset-0 w-full h-full object-cover"
               initial={{ clipPath: 'inset(0 0 100% 0)' }} animate={inView ? { clipPath: 'inset(0 0 0% 0)' } : {}}
               transition={{ duration: 1.4, ease: [0.76, 0, 0.24, 1] }}
-              data-cursor="image" data-cursor-label="Studio" />
+              data-cursor="image" data-cursor-label="View" />
           </div>
         </div>
         <div className="md:col-span-7 md:pt-10">
@@ -329,10 +325,13 @@ const SERVICES = [
   { n: '03', name: 'Bedroom & Living Room', desc: 'Spaces that feel like rest. Spaces that feel like life.', img: IMG.service3 },
   { n: '04', name: 'Office & Commercial', desc: 'We also handle government tenders and corporate office renovations across Pune.', img: IMG.service4 },
 ]
+// Services list rendered inside sticky pin + mobile stack
+// Both hover states use "View" cursor label; clicking navigates to /design-ideas.
 function ServicesSticky() {
   const wrapRef = useRef(null)
   const [active, setActive] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const router = useRouter()
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check(); window.addEventListener('resize', check); return () => window.removeEventListener('resize', check)
@@ -352,7 +351,7 @@ function ServicesSticky() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [isMobile])
 
-  // Mobile: stacked services with fade in
+  // Mobile: stacked services \u2014 each image is a link.
   if (isMobile) {
     return (
       <section id="services" className="bg-cream py-20 px-6">
@@ -362,7 +361,7 @@ function ServicesSticky() {
           {SERVICES.map((s) => (
             <motion.div key={s.n} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.7 }}>
-              <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md mb-5">
+              <div onClick={() => router.push('/design-ideas')} className="relative w-full aspect-[4/3] overflow-hidden rounded-md mb-5 cursor-pointer" data-cursor="image" data-cursor-label="View">
                 <img src={s.img} alt={s.name} className="absolute inset-0 w-full h-full object-cover" />
               </div>
               <div className="font-serif-display text-[#F47B20] italic text-4xl">{s.n}</div>
@@ -397,11 +396,10 @@ function ServicesSticky() {
               ))}
             </div>
           </div>
-          <div className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden rounded-md">
+          <div onClick={() => router.push('/design-ideas')} className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden rounded-md cursor-pointer" data-cursor="image" data-cursor-label="View">
             {SERVICES.map((s, i) => (
               <motion.img key={s.n} src={s.img} alt={s.name} className="absolute inset-0 w-full h-full object-cover"
-                initial={false} animate={{ opacity: i === active ? 1 : 0, scale: i === active ? 1 : 1.1 }} transition={{ duration: 0.9 }}
-                data-cursor="image" data-cursor-label={s.name} />
+                initial={false} animate={{ opacity: i === active ? 1 : 0, scale: i === active ? 1 : 1.1 }} transition={{ duration: 0.9 }} />
             ))}
           </div>
         </div>
@@ -468,6 +466,7 @@ const PROJECTS = [
 ]
 function TiltCard({ project }) {
   const ref = useRef(null)
+  const router = useRouter()
   const onMove = (e) => {
     const el = ref.current; if (!el) return
     const r = el.getBoundingClientRect()
@@ -477,8 +476,8 @@ function TiltCard({ project }) {
   }
   const reset = () => { if (ref.current) ref.current.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)' }
   return (
-    <div ref={ref} onMouseMove={onMove} onMouseLeave={reset}
-      className="tilt-card group relative flex-shrink-0 w-[70vw] md:w-[36vw] h-[68vh] rounded-md overflow-hidden bg-neutral-800"
+    <div ref={ref} onMouseMove={onMove} onMouseLeave={reset} onClick={() => router.push('/design-ideas')}
+      className="tilt-card group relative flex-shrink-0 w-[70vw] md:w-[36vw] h-[68vh] rounded-md overflow-hidden bg-neutral-800 cursor-pointer"
       data-cursor="image" data-cursor-label="View">
       <img src={project.img} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
       <div className="absolute top-4 left-4 z-10 bg-cream/90 text-[#1E1E1E] rounded-full px-3 py-1 text-xs tracking-wide">{project.type}</div>
@@ -691,37 +690,23 @@ function TestimonialCard({ t }) {
 function Testimonials() {
   const trackRef = useRef(null)
   const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
   const dragState = useRef({ startX: 0, startScroll: 0, dragging: false })
 
-  // Auto-advance every 4s
-  useEffect(() => {
-    if (paused) return
-    const id = setInterval(() => {
-      setActive((a) => (a + 1) % TESTS.length)
-    }, 4000)
-    return () => clearInterval(id)
-  }, [paused])
-
-  // Scroll to active card whenever active changes
+  // Scroll to active card when it changes (via arrows or dots)
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
     const card = track.querySelector(`[data-idx="${active}"]`)
-    if (card) {
-      track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.clientWidth) / 2, behavior: 'smooth' })
-    }
+    if (card) track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.clientWidth) / 2, behavior: 'smooth' })
   }, [active])
 
-  // Update active based on user scroll
+  // Update active based on user scroll (drag / swipe)
   const onScroll = () => {
     const track = trackRef.current
     if (!track) return
     const center = track.scrollLeft + track.clientWidth / 2
-    let closest = 0
-    let best = Infinity
-    const cards = track.querySelectorAll('[data-idx]')
-    cards.forEach((c) => {
+    let closest = 0, best = Infinity
+    track.querySelectorAll('[data-idx]').forEach((c) => {
       const cCenter = c.offsetLeft + c.clientWidth / 2
       const d = Math.abs(cCenter - center)
       if (d < best) { best = d; closest = Number(c.getAttribute('data-idx')) }
@@ -729,11 +714,9 @@ function Testimonials() {
     if (closest !== active) setActive(closest)
   }
 
-  // Touch/drag handlers
   const onPointerDown = (e) => {
     const track = trackRef.current; if (!track) return
     dragState.current = { startX: e.clientX ?? e.touches?.[0]?.clientX ?? 0, startScroll: track.scrollLeft, dragging: true }
-    setPaused(true)
   }
   const onPointerMove = (e) => {
     if (!dragState.current.dragging) return
@@ -741,22 +724,27 @@ function Testimonials() {
     const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0
     track.scrollLeft = dragState.current.startScroll - (x - dragState.current.startX)
   }
-  const onPointerUp = () => {
-    dragState.current.dragging = false
-    setTimeout(() => setPaused(false), 800)
-  }
+  const onPointerUp = () => { dragState.current.dragging = false }
+
+  const goPrev = () => setActive((a) => (a - 1 + TESTS.length) % TESTS.length)
+  const goNext = () => setActive((a) => (a + 1) % TESTS.length)
 
   return (
     <section className="py-24 md:py-32 bg-cream">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10 mb-10 md:mb-14">
-        <div className="text-xs tracking-[0.3em] uppercase text-black/50 mb-4">— Kind Words</div>
-        <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl">From <span className="italic text-[#F47B20]">Pune Homes</span></h2>
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 mb-10 md:mb-14 flex items-end justify-between gap-4">
+        <div>
+          <div className="text-xs tracking-[0.3em] uppercase text-black/50 mb-4">— Kind Words</div>
+          <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl">From <span className="italic text-[#F47B20]">Pune Homes</span></h2>
+        </div>
+        {/* Arrow controls */}
+        <div className="hidden md:flex items-center gap-2">
+          <button onClick={goPrev} aria-label="Previous testimonial" data-cursor="link" className="h-12 w-12 rounded-full border border-black/15 hover:border-[#F47B20] hover:text-[#F47B20] flex items-center justify-center min-h-[44px]"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={goNext} aria-label="Next testimonial" data-cursor="link" className="h-12 w-12 rounded-full border border-black/15 hover:border-[#F47B20] hover:text-[#F47B20] flex items-center justify-center min-h-[44px]"><ArrowRight className="h-5 w-5" /></button>
+        </div>
       </div>
       <div
         ref={trackRef}
         onScroll={onScroll}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
         onMouseDown={onPointerDown}
         onMouseMove={onPointerMove}
         onMouseUp={onPointerUp}
@@ -765,19 +753,14 @@ function Testimonials() {
         onTouchEnd={onPointerUp}
         className="flex gap-5 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth px-6 md:px-16 py-4 cursor-grab active:cursor-grabbing"
       >
-        {TESTS.map((t, i) => (
-          <div key={i} data-idx={i}><TestimonialCard t={t} /></div>
-        ))}
+        {TESTS.map((t, i) => (<div key={i} data-idx={i}><TestimonialCard t={t} /></div>))}
       </div>
       <div className="flex justify-center gap-2 mt-8">
         {TESTS.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            aria-label={`Show testimonial ${i+1}`}
-            className={`h-2 rounded-full transition-all duration-500 ${i === active ? 'w-8 bg-[#F47B20]' : 'w-2 bg-black/20 hover:bg-black/40'}`}
-            data-cursor="link"
-          />
+          <button key={i} onClick={() => setActive(i)} aria-label={`Show testimonial ${i+1}`}
+            className={`h-2 rounded-full transition-all duration-500 min-h-[44px] min-w-[44px] md:min-h-[8px] md:min-w-[8px] flex items-center justify-center`} data-cursor="link">
+            <span className={`block h-2 rounded-full transition-all ${i === active ? 'w-8 bg-[#F47B20]' : 'w-2 bg-black/20 hover:bg-black/40'}`} />
+          </button>
         ))}
       </div>
     </section>
@@ -787,6 +770,12 @@ function Testimonials() {
 /* Areas */
 const AREAS = ['Baner','Wakad','Hinjewadi','Kharadi','Viman Nagar','Balewadi','Undri','Hadapsar','Aundh','Koregaon Park','Magarpatta','Kalyani Nagar','Pashan','Pimple Saudagar','Sus Road','NIBM Road']
 function AreasSection() {
+  // Convert display name \u2192 slug URL. Falls back to /areas-we-serve if the area
+  // doesn't have its own dedicated landing page yet.
+  const areaHref = (name) => {
+    const slug = AREA_SLUG_MAP[name]
+    return slug ? `/interior-designer-${slug}-pune` : '/areas-we-serve'
+  }
   return (
     <section className="py-20 md:py-28 px-6 md:px-10 bg-cream">
       <div className="max-w-[1200px] mx-auto text-center">
@@ -794,10 +783,12 @@ function AreasSection() {
         <h2 className="font-serif-display text-3xl sm:text-4xl md:text-6xl mb-12">Wherever you got possession — <span className="italic text-[#F47B20]">we are there.</span></h2>
         <div className="flex flex-wrap justify-center gap-3">
           {AREAS.map((a, i) => (
-            <motion.span key={a} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.03 }}
-              className="px-5 py-2.5 rounded-full border border-black/15 text-sm hover:bg-[#F47B20] hover:text-white hover:border-[#F47B20] hover:shadow-[0_0_18px_rgba(244,123,32,0.35)] transition-all cursor-pointer"
-              data-cursor="link">{a}</motion.span>
+            <motion.div key={a}
+              initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.03 }}>
+              <Link href={areaHref(a)} data-cursor="link"
+                className="px-5 py-2.5 rounded-full border border-black/15 text-sm hover:bg-[#F47B20] hover:text-white hover:border-[#F47B20] hover:shadow-[0_0_18px_rgba(244,123,32,0.35)] transition-all cursor-pointer inline-block min-h-[44px] flex items-center">{a}</Link>
+            </motion.div>
           ))}
         </div>
       </div>
