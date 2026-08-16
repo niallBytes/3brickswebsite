@@ -17,14 +17,24 @@ import { MongoClient } from 'mongodb'
 import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
 
-let client, db
+// Cache connection across hot reloads in dev and across invocations in prod
+const globalWithMongo = global
+if (!globalWithMongo._mongoClient) {
+  globalWithMongo._mongoClient = null
+  globalWithMongo._mongoDb = null
+}
+
 async function getDb() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
-  }
-  return db
+  if (globalWithMongo._mongoDb) return globalWithMongo._mongoDb
+  const client = new MongoClient(process.env.MONGO_URL, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+    maxPoolSize: 10,
+  })
+  await client.connect()
+  globalWithMongo._mongoClient = client
+  globalWithMongo._mongoDb = client.db(process.env.DB_NAME)
+  return globalWithMongo._mongoDb
 }
 
 // Apply permissive CORS — API is only called from same domain but keep flexible
@@ -126,6 +136,7 @@ async function handle(req, { params }) {
         page_url: body.page_url || '',
         referral_code: body.referral_code || '',
         status: 'new',
+        read: false,
         notes: '',
         ip,
         user_agent: req.headers.get('user-agent') || '',
@@ -206,30 +217,73 @@ async function handle(req, { params }) {
     }
 
     // ---------- Admin: stats ----------
-    if (route === '/admin/stats' && method === 'GET') {
-      if (!isAdmin(req, url)) return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
-      const start = new Date(); start.setDate(1); start.setHours(0, 0, 0, 0)
-      const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0)
-      const dayEnd = new Date(); dayEnd.setHours(23, 59, 59, 999)
-      const [total, month, newLeads, guides, sourceAgg] = await Promise.all([
-        db.collection('leads').countDocuments({}),
-        db.collection('leads').countDocuments({ created_at: { $gte: start } }),
-        db.collection('leads').countDocuments({ status: 'new' }),
-        db.collection('guide_downloads').countDocuments({ created_at: { $gte: start } }),
-        db.collection('leads').aggregate([
-          { $match: { created_at: { $gte: start } } },
-          { $group: { _id: '$source', count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-        ]).toArray(),
-      ])
-      const scheduledToday = await db.collection('leads').countDocuments({
-        preferred_date: { $regex: `^${new Date().toISOString().slice(0,10)}` },
-      })
-      return cors(NextResponse.json({
-        total, month, newLeads, guidesMonth: guides, scheduledToday,
-        bySource: sourceAgg.map(s => ({ source: s._id || 'unknown', count: s.count })),
-      }))
-    }
+if (route === '/admin/stats' && method === 'GET') {
+  if (!isAdmin(req, url)) {
+    return cors(
+      NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    )
+  }
+
+  const start = new Date()
+  start.setDate(1)
+  start.setHours(0, 0, 0, 0)
+
+  const dayStart = new Date()
+  dayStart.setHours(0, 0, 0, 0)
+
+  const dayEnd = new Date()
+  dayEnd.setHours(23, 59, 59, 999)
+
+  const [total, month, newLeads, guides, sourceAgg] = await Promise.all([
+    // Total leads
+    db.collection('leads').countDocuments({}),
+
+    // Leads this month
+    db.collection('leads').countDocuments({
+      created_at: { $gte: start }
+    }),
+
+    // Unread leads
+    db.collection('leads').countDocuments({
+      $or: [
+        { read: false },
+        { read: { $exists: false } }
+      ]
+    }),
+
+    // Guide downloads this month
+    db.collection('guide_downloads').countDocuments({
+      created_at: { $gte: start }
+    }),
+
+    // Leads by source this month
+    db.collection('leads').aggregate([
+      { $match: { created_at: { $gte: start } } },
+      { $group: { _id: '$source', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]).toArray(),
+  ])
+
+  const scheduledToday = await db.collection('leads').countDocuments({
+    preferred_date: {
+      $regex: `^${new Date().toISOString().slice(0, 10)}`
+    },
+  })
+
+  return cors(
+    NextResponse.json({
+      total,
+      month,
+      newLeads,
+      guidesMonth: guides,
+      scheduledToday,
+      bySource: sourceAgg.map(s => ({
+        source: s._id || 'unknown',
+        count: s.count,
+      })),
+    })
+  )
+}
 
     // ---------- Admin: list leads ----------
     if (route === '/admin/leads' && method === 'GET') {
@@ -256,18 +310,64 @@ async function handle(req, { params }) {
       return cors(NextResponse.json({ leads: cleaned, total, page, perPage }))
     }
 
-    // ---------- Admin: update lead ----------
-    if (route.startsWith('/admin/leads/') && (method === 'PATCH' || method === 'PUT')) {
-      if (!isAdmin(req, url)) return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
-      const id = path[2]
-      const body = await req.json().catch(() => ({}))
-      const update = {}
-      if (body.status) update.status = String(body.status)
-      if (body.notes !== undefined) update.notes = String(body.notes)
-      if (!Object.keys(update).length) return cors(NextResponse.json({ error: 'nothing to update' }, { status: 400 }))
-      await db.collection('leads').updateOne({ id }, { $set: update })
-      return cors(NextResponse.json({ ok: true }))
+    // ---------- Admin: update/delete lead ----------
+if (
+  route.startsWith('/admin/leads/') &&
+  (method === 'PATCH' || method === 'PUT' || method === 'DELETE')
+) {
+  if (!isAdmin(req, url)) {
+    return cors(
+      NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    )
+  }
+
+  const id = path[2]
+
+  // DELETE lead
+  if (method === 'DELETE') {
+    const result = await db.collection('leads').deleteOne({ id })
+
+    if (result.deletedCount === 0) {
+      return cors(
+        NextResponse.json({ error: 'Lead not found' }, { status: 404 })
+      )
     }
+
+    return cors(
+      NextResponse.json({ ok: true })
+    )
+  }
+
+  // UPDATE lead
+  const body = await req.json().catch(() => ({}))
+  const update = {}
+
+  if (body.status) {
+    update.status = String(body.status)
+  }
+
+  if (body.notes !== undefined) {
+    update.notes = String(body.notes)
+  }
+
+  if (!Object.keys(update).length) {
+    return cors(
+      NextResponse.json(
+        { error: 'nothing to update' },
+        { status: 400 }
+      )
+    )
+  }
+
+  await db.collection('leads').updateOne(
+    { id },
+    { $set: update }
+  )
+
+  return cors(
+    NextResponse.json({ ok: true })
+  )
+}
 
     // ---------- Admin: guide downloads ----------
     if (route === '/admin/guide-downloads' && method === 'GET') {
@@ -282,6 +382,62 @@ async function handle(req, { params }) {
       const list = await db.collection('referrals').find({}).sort({ created_at: -1 }).limit(1000).toArray()
       return cors(NextResponse.json({ referrals: list.map(({ _id, ...r }) => r) }))
     }
+
+// ---------- Admin: Mark lead as read ----------
+if (
+  route.startsWith('/admin/leads/') &&
+  route.endsWith('/read') &&
+  method === 'POST'
+) {
+  if (!isAdmin(req, url)) {
+    return cors(
+      NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    )
+  }
+
+  const id = path[2]
+
+  const result = await db.collection('leads').updateOne(
+    { id },
+    { $set: { read: true } }
+  )
+
+  if (result.matchedCount === 0) {
+    return cors(
+      NextResponse.json({ error: 'Lead not found' }, { status: 404 })
+    )
+  }
+
+  return cors(
+    NextResponse.json({ ok: true })
+  )
+}
+
+  // ---------- Mark referral as rewarded ----------
+  if (route.startsWith('/referrals/') && route.endsWith('/reward') && method === 'POST') {
+    if (!isAdmin(req, url)) return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    const code = path[1]
+    const body = await req.json().catch(() => ({}))
+    await db.collection('referrals').updateOne(
+      { unique_code: code },
+      {
+        $inc: { rewards_triggered: 1 },
+        $push: {
+          reward_history: {
+            lead_id: body.lead_id || '',
+            triggered_at: new Date(),
+          }
+        }
+      }
+    )
+    if (body.lead_id) {
+      await db.collection('leads').updateOne(
+        { id: body.lead_id },
+        { $set: { status: 'closed_won', notes: `Referral reward triggered via code ${code}` } }
+      )
+    }
+    return cors(NextResponse.json({ ok: true }))
+  }
 
     return cors(NextResponse.json({ error: `Route ${route} not found` }, { status: 404 }))
   } catch (err) {

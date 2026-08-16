@@ -14,96 +14,30 @@ import SiteFooter from '@/components/SiteFooter'
 import LeadForm from '@/components/LeadForm'
 import { useQuiz } from '@/components/QuizProvider'
 import { AREA_PAGES } from '@/lib/content'
+import Image from 'next/image'
 
 // Slug map \u2014 area display name \u2192 URL slug. Only include areas with pages.
 const AREA_SLUG_MAP = AREA_PAGES.reduce((acc, a) => { acc[a.name] = a.slug; return acc }, {})
 
 const IMG = {
-  studio: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80',
-  service1: 'https://images.unsplash.com/photo-1616047006789-b7af5afb8c20?auto=format&fit=crop&w=1600&q=80',
-  service2: 'https://images.unsplash.com/photo-1600489000022-c2086d79f9d4?auto=format&fit=crop&w=1600&q=80',
-  service3: 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1600&q=80',
-  service4: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80',
-  p1: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=1200&q=80',
-  p2: 'https://images.unsplash.com/photo-1622372738946-62e02505feb3?auto=format&fit=crop&w=1200&q=80',
-  p3: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?auto=format&fit=crop&w=1200&q=80',
-  p4: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
-  p5: 'https://images.pexels.com/photos/276746/pexels-photo-276746.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  p6: 'https://images.pexels.com/photos/33685860/pexels-photo-33685860.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  ba1before: 'https://images.unsplash.com/photo-1503594384566-461fe158e797?auto=format&fit=crop&w=1200&q=80',
-  ba1after: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80',
-  ba2before: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80',
-  ba2after: 'https://images.unsplash.com/photo-1617228069096-4638a7ffc906?auto=format&fit=crop&w=1200&q=80',
+  studio:    '/images/interiors/studio-interior.jpg',
+  service1:  '/images/interiors/service-full-home.jpg',
+  service2:  '/images/interiors/service-kitchen.jpg',
+  service3:  '/images/interiors/service-bedroom.jpg',
+  service4:  '/images/interiors/service-office.jpg',
+  p1:        '/images/interiors/portfolio-1.jpg',
+  p2:        '/images/interiors/portfolio-2.jpg',
+  p3:        '/images/interiors/portfolio-3.jpg',
+  p4:        '/images/interiors/portfolio-4.1.jpg',
+  p5:        '/images/interiors/portfolio-5.jpg',
+  p6:        '/images/interiors/govoffice.jpg',
+  ba1before: '/images/interiors/ba-before-1.jpg',
+  ba1after:  '/images/interiors/ba-after-1.jpg',
+  ba2before: '/images/interiors/ba-before-2.jpg',
+  ba2after:  '/images/interiors/ba-after-2.jpg',
 }
 
 const HERO_VIDEO = 'https://assets.mixkit.co/videos/4148/4148-720.mp4'
-
-/* Loader */
-function Loader({ onDone }) {
-  const [pct, setPct] = useState(0)
-  useEffect(() => {
-    let raf
-    const start = performance.now()
-    const dur = 1400
-    const tick = (t) => {
-      const p = Math.min(100, ((t - start) / dur) * 100)
-      setPct(Math.floor(p))
-      if (p < 100) raf = requestAnimationFrame(tick)
-      else setTimeout(onDone, 350)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [onDone])
-  return (
-    <motion.div className="fixed inset-0 z-[9998] bg-cream flex flex-col items-center justify-center"
-      initial={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.6 } }}>
-      <div className="font-serif-display text-5xl md:text-6xl mb-8 tracking-tight">
-        <span>YOU</span><span className="text-[#F47B20] italic">FIRST</span>
-      </div>
-      <div className="w-56 h-[2px] bg-black/10 relative overflow-hidden">
-        <div className="absolute inset-y-0 left-0 bg-[#F47B20] transition-[width] duration-100" style={{ width: `${pct}%` }} />
-      </div>
-      <div className="mt-3 text-xs tracking-[0.3em] text-black/50 font-mono">{pct}%</div>
-    </motion.div>
-  )
-}
-
-/* Custom Cursor */
-function CustomCursor() {
-  const ref = useRef(null)
-  const [state, setState] = useState('')
-  const [label, setLabel] = useState('View')
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let x = window.innerWidth / 2, y = window.innerHeight / 2
-    let tx = x, ty = y
-    const move = (e) => { tx = e.clientX; ty = e.clientY }
-    let raf
-    const loop = () => {
-      x += (tx - x) * 0.2
-      y += (ty - y) * 0.2
-      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
-      raf = requestAnimationFrame(loop)
-    }
-    window.addEventListener('mousemove', move)
-    raf = requestAnimationFrame(loop)
-    const over = (e) => {
-      const t = e.target.closest('[data-cursor]')
-      if (!t) { setState(''); return }
-      const c = t.getAttribute('data-cursor')
-      setLabel(t.getAttribute('data-cursor-label') || 'View')
-      setState(c === 'image' ? 'hover-image' : 'hover-link')
-    }
-    document.addEventListener('mouseover', over)
-    return () => {
-      window.removeEventListener('mousemove', move)
-      document.removeEventListener('mouseover', over)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
-  return <div ref={ref} className={`yf-cursor ${state}`}><span className="label">{label}</span></div>
-}
 
 /* Word-by-word reveal */
 function SplitReveal({ children, className = '', stagger = 0.05, delay = 0 }) {
@@ -166,7 +100,7 @@ function Navbar({ onCta }) {
         <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 md:px-10 h-20">
           <a href="#top" data-cursor="link">
             <div className={`font-serif-display text-2xl md:text-3xl ${scrolled ? 'text-[#1E1E1E]' : 'text-cream'}`}>
-              <span>YOU</span><span className="text-[#F47B20] italic">FIRST</span>
+              <span>3</span><span className="text-[#F47B20] italic">Bricks</span>
             </div>
           </a>
           <nav className="hidden md:flex items-center gap-8">
@@ -189,7 +123,7 @@ function Navbar({ onCta }) {
           <motion.div className="fixed inset-0 z-[70] bg-[#1E1E1E] text-cream flex flex-col"
             initial={{ y: '-100%' }} animate={{ y: 0 }} exit={{ y: '-100%' }} transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}>
             <div className="flex justify-between items-center px-6 h-20">
-              <div className="font-serif-display text-2xl"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span></div>
+              <div className="font-serif-display text-2xl"><span>3</span><span className="text-[#F47B20] italic">Bricks</span></div>
               <button onClick={() => setOpen(false)}><X className="h-8 w-8" /></button>
             </div>
             <div className="flex-1 flex flex-col justify-center gap-6 px-8">
@@ -214,7 +148,7 @@ function Hero() {
   return (
     <section id="top" data-cursor-theme="dark" className="relative h-[100svh] w-full overflow-hidden bg-[#1E1E1E] text-cream">
       <video className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline
-        poster="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80">
+        poster="/images/interiors/studio-interior.jpg">
         <source src={HERO_VIDEO} type="video/mp4" />
       </video>
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
@@ -309,7 +243,7 @@ function StudioStatement() {
               </div>
             ))}
           </div>
-          <a href="#about" data-cursor="link" className="mt-10 inline-flex items-center gap-2 text-sm border-b border-black/30 pb-1 hover:text-[#F47B20] hover:border-[#F47B20] transition-colors">
+          <a href="/about" data-cursor="link" className="mt-10 inline-flex items-center gap-2 text-sm border-b border-black/30 pb-1 hover:text-[#F47B20] hover:border-[#F47B20] transition-colors">
             Our Story <ArrowUpRight className="h-4 w-4" />
           </a>
         </div>
@@ -649,7 +583,7 @@ function BeforeAfterSection() {
     <section className="bg-[#1E1E1E] text-cream py-24 md:py-32 px-6 md:px-10">
       <div className="max-w-[1400px] mx-auto">
         <div className="text-xs tracking-[0.3em] uppercase text-cream/50 mb-4">— The Transformation</div>
-        <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl mb-16">The You First <span className="italic text-[#F47B20]">Difference</span></h2>
+        <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl mb-16">The 3 Bricks <span className="italic text-[#F47B20]"> Difference </span></h2>
         <div className="grid md:grid-cols-2 gap-10 md:gap-12">
           <BeforeAfter before={IMG.ba1before} after={IMG.ba1after} title="3BHK Living · Baner" area="Contemporary · 1450 sqft" budget="₹24L" days="65 days" />
           <BeforeAfter before={IMG.ba2before} after={IMG.ba2after} title="Modular Kitchen · Wakad" area="L-shape · 120 sqft" budget="₹6.5L" days="28 days" />
@@ -798,9 +732,45 @@ function AreasSection() {
 
 /* Pricing */
 const TIERS = [
-  { label: 'Studio / 1BHK', name: 'Essential', price: '₹4.5L', note: 'starting', feats: ['Kitchen + Wardrobes', 'Basic lighting design', 'Standard finishes', '45–55 day delivery'] },
-  { label: '2BHK', name: 'Signature', price: '₹9L', note: 'starting', feats: ['Everything in Essential', 'Full home 3D + moodboard', 'Premium finishes', 'Custom carpentry', 'Dedicated designer'], featured: true },
-  { label: '3BHK & above', name: 'Premium', price: '₹18L', note: 'starting', feats: ['Everything in Signature', 'Imported hardware', 'Bespoke furniture', 'Smart home wiring', 'Site manager onsite'] },
+  {
+    label: 'Smart & Functional',
+    name: 'Essential',
+    price: '₹4.5L',
+    note: 'starting from',
+    feats: [
+      'Kitchen + Wardrobes',
+      'Basic lighting design',
+      'Standard finishes',
+      '45–55 day delivery',
+    ],
+  },
+  {
+    label: 'Elevated & Customised',
+    name: 'Signature',
+    price: '₹5.8L',
+    note: 'starting from',
+    feats: [
+      'Everything in Essential',
+      'Full home 3D + moodboard',
+      'Premium finishes',
+      'Custom carpentry',
+      'Dedicated designer',
+    ],
+    featured: true,
+  },
+  {
+    label: 'Luxury & Bespoke',
+    name: 'Premium',
+    price: '₹6.8L',
+    note: 'starting from',
+    feats: [
+      'Everything in Signature',
+      'Imported hardware',
+      'Bespoke furniture',
+      'Smart home wiring',
+      'Site manager onsite',
+    ],
+  },
 ]
 function Pricing({ onCta }) {
   return (
@@ -867,9 +837,9 @@ function Contact() {
           <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl leading-[1.02]">Just got possession? <br /><span className="italic">Let's make it yours.</span></h2>
           <p className="mt-6 max-w-md text-white/90">Book a free 60-minute site visit. We'll walk your space, talk what you love, and put together a real proposal.</p>
           <div className="mt-10 space-y-4 text-white/95">
-            <div className="flex items-center gap-3"><Phone className="h-5 w-5" /> +91 98XXX XXXXX</div>
-            <div className="flex items-center gap-3"><Mail className="h-5 w-5" /> hello@youfirst.design</div>
-            <div className="flex items-center gap-3"><MapPin className="h-5 w-5" /> Studio · Baner, Pune</div>
+            <div className="flex items-center gap-3"><Phone className="h-5 w-5" /> +91 9545250565 </div>
+            <div className="flex items-center gap-3"><Mail className="h-5 w-5" /> hello@3bricksinteriors.com</div>
+            <div className="flex items-center gap-3"><MapPin className="h-5 w-5" /> Studio · Camp, Pune</div>
           </div>
         </div>
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}
@@ -926,7 +896,7 @@ function Footer() {
     <footer className="bg-[#141414] text-cream pt-20 pb-8 px-6 md:px-10">
       <div className="max-w-[1400px] mx-auto grid md:grid-cols-4 gap-10">
         <div>
-          <div className="font-serif-display text-3xl mb-4"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span></div>
+          <div className="font-serif-display text-3xl mb-4"><span>3</span><span className="text-[#F47B20] italic">Bricks</span></div>
           <p className="text-sm text-cream/60 max-w-xs">Boutique interior design studio. Pune's homes. Delivered on time, with taste.</p>
           <div className="flex gap-3 mt-6">
             {[Instagram, Facebook, Youtube].map((Icon, i) => (
@@ -949,12 +919,12 @@ function Footer() {
         <div>
           <div className="text-xs tracking-[0.3em] uppercase text-cream/50 mb-4">Contact</div>
           <ul className="space-y-2 text-sm text-cream/80">
-            <li>+91 98XXX XXXXX</li><li>hello@youfirst.design</li><li>Studio · Baner, Pune</li>
+            <li>+91 95452 50565</li><li>hello@3bircksinteriors</li><li>Studio · Camp, Pune</li>
           </ul>
         </div>
       </div>
       <div className="max-w-[1400px] mx-auto mt-16 pt-6 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-cream/50">
-        <div>© {new Date().getFullYear()} You First. All rights reserved.</div>
+        <div>© {new Date().getFullYear()} 3 Bricks. All rights reserved.</div>
         <div>Made with <span className="text-[#F47B20]">♥</span> for Pune homeowners</div>
       </div>
     </footer>
@@ -981,10 +951,41 @@ function App() {
   // Any CTA on the page routes to the estimate quiz \u2014 the highest-value flow.
   const onCta = useCallback(() => openQuiz('homepage_cta'), [openQuiz])
 
+  useEffect(() => {
+    const t = setTimeout(() => setLoaded(true), 1400)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
     <SiteChrome>
       <div className="bg-cream text-[#1E1E1E]">
-        <AnimatePresence>{!loaded && <Loader onDone={() => setLoaded(true)} />}</AnimatePresence>
+        <AnimatePresence>
+          {!loaded && (
+            <motion.div
+              className="fixed inset-0 z-[9998] bg-[#F8F5F0] flex flex-col items-center justify-center"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Image
+                src="/brand/logo.png"
+                alt="3 Bricks"
+                width={200}
+                height={80}
+                priority
+                className="h-16 w-auto"
+              />
+              <div className="mt-6 w-40 h-[2px] bg-black/10 overflow-hidden rounded-full">
+                <motion.div
+                  className="h-full bg-[#F47B20]"
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '0%' }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <ScrollIndicator />
         <SiteNav />
         <Hero onCta={onCta} />

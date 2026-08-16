@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react'
 import { DESIGN_CATEGORIES, AREA_PAGES } from '@/lib/content'
 import { useQuiz } from './QuizProvider'
+import Image from 'next/image'
 
 export default function SiteNav({ variant = 'transparent-on-top' }) {
   const [scrolled, setScrolled] = useState(false)
@@ -40,9 +41,20 @@ export default function SiteNav({ variant = 'transparent-on-top' }) {
     <>
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${bgCls}`}>
         <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 md:px-10 h-20">
-          <Link href="/" data-cursor="link" className={`font-serif-display text-2xl md:text-3xl ${textCls}`}>
-            <span>YOU</span><span className="text-[#F47B20] italic">FIRST</span>
-          </Link>
+          <Link
+  href="/"
+  data-cursor="link"
+  className="flex items-center"
+>
+  <Image
+    src="/brand/logo.png"
+    alt="3 Bricks Interiors"
+    width={170}
+    height={55}
+    priority
+    className="h-29 w-auto"
+  />
+</Link>
 
           <nav className="hidden lg:flex items-center gap-7">
             {/* Design Ideas mega dropdown */}
@@ -70,19 +82,44 @@ export default function SiteNav({ variant = 'transparent-on-top' }) {
             <Link href="/#pricing" className={`text-sm hover:text-[#F47B20] ${textCls}`} data-cursor="link">Pricing</Link>
 
             {/* Areas dropdown */}
-            <div className="relative" onMouseEnter={() => setAreasOpen(true)} onMouseLeave={() => setAreasOpen(false)}>
-              <button className={`flex items-center gap-1 text-sm hover:text-[#F47B20] ${textCls}`} data-cursor="link">Areas We Serve <ChevronDown className="h-4 w-4" /></button>
-              <AnimatePresence>
-                {areasOpen && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-3 w-[280px] bg-white text-[#1E1E1E] rounded-lg shadow-2xl border border-black/5 p-4">
-                    {AREA_PAGES.map(a => (
-                      <Link key={a.slug} href={`/interior-designer-${a.slug}-pune`} className="block px-3 py-2 rounded hover:bg-[#F47B20]/10 hover:text-[#F47B20] text-sm" data-cursor="link">Interior Designer in {a.name}</Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+<div
+  className="relative"
+  onMouseEnter={() => setAreasOpen(true)}
+  onMouseLeave={() => setAreasOpen(false)}
+>
+  <button
+    className={`flex items-center gap-1 text-sm hover:text-[#F47B20] ${textCls}`}
+    data-cursor="link"
+  >
+    Areas We Serve
+    <ChevronDown className="h-4 w-4" />
+  </button>
+
+  <AnimatePresence>
+    {areasOpen && (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.2 }}
+        className="absolute top-full right-0 mt-3 w-[560px] bg-white text-[#1E1E1E] rounded-lg shadow-2xl border border-black/5 p-5 grid grid-cols-2 gap-x-6 gap-y-1"
+      >
+        {AREA_PAGES.map((a) => (
+          <Link
+            key={a.slug}
+            href={`/interior-designer-${a.slug}-pune`}
+            className="block px-3 py-2 rounded hover:bg-[#F47B20]/10 hover:text-[#F47B20] text-sm"
+            data-cursor="link"
+          >
+            Interior Designer in {a.name}
+          </Link>
+        ))}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
+            <Link href="/architecture-landscaping" className={`text-sm hover:text-[#F47B20] ${textCls}`} data-cursor="link">Architecture & Landscaping</Link>
 
             <Link href="/#contact" className={`text-sm hover:text-[#F47B20] ${textCls}`} data-cursor="link">Contact</Link>
           </nav>
@@ -108,7 +145,16 @@ export default function SiteNav({ variant = 'transparent-on-top' }) {
           <motion.div className="fixed inset-0 z-[70] bg-[#1E1E1E] text-cream flex flex-col" style={{ cursor: 'auto' }}
             initial={{ y: '-100%' }} animate={{ y: 0 }} exit={{ y: '-100%' }} transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}>
             <div className="flex justify-between items-center px-6 h-20">
-              <div className="font-serif-display text-2xl"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span></div>
+              <Link href="/" className="flex items-center">
+                <Image
+                 src="/brand/logo.png"
+                 alt="3 Bricks Interiors"
+                 width={150}
+                 height={50}
+                 priority
+                 className="h-10 w-auto"
+                />
+              </Link>
               <button onClick={() => setOpen(false)} aria-label="Close"><X className="h-8 w-8" /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-10">
@@ -153,6 +199,7 @@ export default function SiteNav({ variant = 'transparent-on-top' }) {
 
                 <Link href="/free-guide" onClick={() => setOpen(false)} className="block py-4 border-b border-cream/10 font-serif-display text-3xl italic">Free Guide</Link>
                 <Link href="/refer-a-friend" onClick={() => setOpen(false)} className="block py-4 border-b border-cream/10 font-serif-display text-3xl italic">Refer a Friend</Link>
+                <Link href="/architecture-landscaping" onClick={() => setOpen(false)} className="block py-4 border-b border-cream/10 font-serif-display text-3xl italic">Architecture & Landscaping</Link>
                 <Link href="/#contact" onClick={() => setOpen(false)} className="block py-4 border-b border-cream/10 font-serif-display text-3xl italic">Contact</Link>
               </div>
               <button onClick={() => { setOpen(false); openQuiz('mobile_menu') }} className="mt-8 w-full bg-[#F47B20] rounded-full py-4 text-white text-sm font-medium min-h-[48px]">Get Free Estimate →</button>

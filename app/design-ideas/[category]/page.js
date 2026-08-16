@@ -61,7 +61,7 @@ export default function CategoryPage() {
               <div className="columns-2 md:columns-3 lg:columns-4 gap-4 md:gap-6 [column-fill:_balance]">
                 {chunk.map((id, i) => (
                   <button key={ci + '-' + i} onClick={() => setLightbox(unsplash(id, 1800))} className="group relative break-inside-avoid mb-4 md:mb-6 w-full block rounded-lg overflow-hidden bg-neutral-800" data-cursor="image" data-cursor-label="View">
-                    {/* Replace with actual You First project photos */}
+                    {/* Replace with actual 3 Bricks project photos */}
                     <img src={unsplash(id, 800)} alt={cat.short} loading="lazy" className="w-full h-auto block transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-end p-4">
                       <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1">Get Inspired <ArrowRight className="h-3.5 w-3.5" /></span>

@@ -1,11 +1,16 @@
 const nextConfig = {
-  output: 'standalone',
+  
   images: {
-    unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'avatars.githubusercontent.com', pathname: '/**' },
     ],
   },
+
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react', '@tanstack/react-query'],
+  },
+  
   // Renamed from experimental.serverComponentsExternalPackages in Next 15
   serverExternalPackages: ['mongodb'],
   webpack(config, { dev }) {

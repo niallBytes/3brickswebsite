@@ -70,7 +70,7 @@ export default function AreaPage() {
 
         {/* Why area residents choose us */}
         <section className="max-w-[1400px] mx-auto px-6 md:px-10 py-14">
-          <h2 className="font-serif-display text-3xl md:text-5xl mb-8">Why <span className="italic text-[#F47B20]">{area.name}</span> homeowners choose You First</h2>
+          <h2 className="font-serif-display text-3xl md:text-5xl mb-8">Why <span className="italic text-[#F47B20]">{area.name}</span> homeowners choose 3 Bricks</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {area.points.map((p, i) => (
               <div key={i} className="flex items-start gap-3 bg-white border border-black/5 rounded-lg p-5">
@@ -115,8 +115,8 @@ export default function AreaPage() {
         <section className="bg-cream border-y border-black/5">
           <div className="max-w-[1200px] mx-auto px-6 md:px-10 py-14 text-center">
             <div className="flex justify-center gap-1 mb-4">{[0,1,2,3,4].map(i => <Star key={i} className="h-4 w-4 fill-[#F47B20] text-[#F47B20]" />)}</div>
-            <p className="font-serif-display italic text-2xl md:text-3xl max-w-3xl mx-auto text-black/80">“You First delivered our {area.name} apartment on time, with weekly updates and a designer who actually listened. Rare in Pune.”</p>
-            <div className="mt-4 text-sm text-black/60">A You First client — {area.name}</div>
+            <p className="font-serif-display italic text-2xl md:text-3xl max-w-3xl mx-auto text-black/80">“3 Bricks delivered our {area.name} apartment on time, with weekly updates and a designer who actually listened. Rare in Pune.”</p>
+            <div className="mt-4 text-sm text-black/60">A 3 Bricks client — {area.name}</div>
           </div>
         </section>
 

@@ -1,7 +1,7 @@
 'use client'
 
 // =============================================================================
-// You First — Reusable inline Lead Form
+// 3 Bricks — Reusable inline Lead Form
 // Clean, responsive lead-capture card:
 //   Desktop: 2-column grid (Name + Phone on row 1, Email + Area on row 2)
 //   Mobile: single column, everything full-width

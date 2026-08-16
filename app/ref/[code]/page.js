@@ -31,7 +31,13 @@ export default function RefCode() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
       <div className="text-center">
-        <div className="font-serif-display text-3xl"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span></div>
+        <div className="font-serif-display text-3xl"><Image
+          src="/brand/logo.png"
+          alt="3 Bricks Interiors"
+          width={160}
+          height={10}
+          className="h-21 w-auto mb-4"
+        /> </div>
         <p className="mt-3 text-black/60">Applying your referral discount…</p>
       </div>
     </div>

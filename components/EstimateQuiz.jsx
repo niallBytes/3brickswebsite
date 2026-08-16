@@ -1,7 +1,7 @@
 'use client'
 
 // =============================================================================
-// You First — 12-Step Estimate Quiz Modal
+// 3 Bricks — Estimate Quiz Modal
 // Renders as a full-screen overlay. Users complete 12 steps, we compute an
 // estimate range, POST everything to /api/leads, and show a results screen.
 // =============================================================================
@@ -9,11 +9,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, ArrowRight, ArrowLeft, Lightbulb, Search, Upload, CheckCircle2,
+  X, ArrowRight, ArrowLeft, Lightbulb, Upload, CheckCircle2,
   Sparkles, ShieldCheck, Clock, UserCheck, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { AREAS } from '@/lib/content'
 import { QUIZ_STEPS, calculateEstimate, formatLakh } from '@/lib/quiz'
+import Image from 'next/image'
 
 // Small helper to render the light-blue info box under each question
 function InfoBox({ children }) {
@@ -56,18 +57,9 @@ function AnswerCard({ selected, onClick, icon, label, desc, recommended, compact
 
 // ==== Step-specific renderers ====
 function LocationStep({ value, onChange }) {
-  const v = value || { search: '', area: '', pincode: '' }
+  const v = value || { area: '', pincode: '' }
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="h-4 w-4 absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
-        <input
-          value={v.search}
-          onChange={(e) => onChange({ ...v, search: e.target.value })}
-          placeholder="Search by area or society name"
-          className="w-full rounded-lg border border-black/15 pl-11 pr-4 py-3.5 focus:border-[#F47B20] focus:outline-none focus:ring-2 focus:ring-[#F47B20]/20"
-        />
-      </div>
       <select
         value={v.area}
         onChange={(e) => onChange({ ...v, area: e.target.value })}
@@ -102,22 +94,49 @@ function FloorPlanStep({ value, onChange }) {
         {v.has === 'yes' && (
           <div className="mt-4">
             <div
-              onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
-              className="border-2 border-dashed border-[#F47B20]/40 rounded-lg py-8 text-center hover:bg-white/50 cursor-pointer"
-            >
-              <Upload className="h-6 w-6 mx-auto text-[#F47B20]" />
-              <div className="mt-2 text-sm text-black/70">
-                {v.file ? v.file.name : 'Drag & drop your file, or click to upload'}
-              </div>
-              <div className="mt-1 text-xs text-black/40">JPG, PNG, PDF · Max 10 MB</div>
-            </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={(e) => onChange({ ...v, file: e.target.files?.[0] || null })}
-              className="hidden"
-            />
+  onClick={(e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    inputRef.current?.click()
+  }}
+  className="border-2 border-dashed border-[#F47B20]/40 rounded-lg py-8 text-center hover:bg-white/50 cursor-pointer"
+>
+  <Upload className="h-6 w-6 mx-auto text-[#F47B20]" />
+
+  <div className="mt-2 text-sm text-black/70">
+    {v.file ? (
+      <span className="font-medium text-green-700">
+        ✓ {v.file.name}
+      </span>
+    ) : (
+      'Click to upload a floor plan'
+    )}
+  </div>
+
+  <div className="mt-1 text-xs text-black/40">
+    JPG, PNG, PDF · Max 10 MB
+  </div>
+</div>
+
+<input
+  ref={inputRef}
+  type="file"
+  accept=".jpg,.jpeg,.png,.pdf"
+  onClick={(e) => e.stopPropagation()}
+  onChange={(e) => {
+    e.stopPropagation()
+
+    const file = e.target.files?.[0]
+
+    if (file) {
+      onChange({
+        has: 'yes',
+        file,
+      })
+    }
+  }}
+  className="hidden"
+/>
           </div>
         )}
       </button>
@@ -241,7 +260,7 @@ function ContactStep({ value, onChange, error }) {
 function Results({ answers, estimate, onBookConsultation, onClose }) {
   const [showDetails, setShowDetails] = useState(false)
   return (
-    <div className="flex-1 overflow-y-auto px-4 md:px-10 py-8 max-w-3xl mx-auto w-full">
+    <div id="quiz-results-body" data-lenis-prevent className="flex-1 overflow-y-auto px-4 md:px-10 py-8 max-w-3xl mx-auto w-full">
       <div className="text-center">
         <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
           <CheckCircle2 className="h-9 w-9 text-green-600" />
@@ -249,7 +268,7 @@ function Results({ answers, estimate, onBookConsultation, onClose }) {
         <h2 className="font-serif-display text-3xl md:text-4xl mt-6 leading-tight">Here&rsquo;s your estimated budget range</h2>
         <div className="mt-8 rounded-2xl bg-white shadow-xl border border-black/5 p-8 md:p-10">
           <div className="font-serif-display text-5xl md:text-6xl font-bold text-green-700">
-            {formatLakh(estimate.min)} – {formatLakh(estimate.max)}<span className="text-2xl align-super">*</span>
+            {formatLakh(estimate.min)}<span className="text-2xl align-super">*</span>
           </div>
           <p className="text-sm text-black/50 mt-4 italic">This isn&rsquo;t a final quote and can be customised to suit your needs.</p>
           <button onClick={() => setShowDetails(true)} className="mt-4 text-sm text-[#F47B20] underline">View detailed summary →</button>
@@ -283,10 +302,11 @@ function Results({ answers, estimate, onBookConsultation, onClose }) {
       <AnimatePresence>
         {showDetails && (
           <motion.div
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[10001] bg-white rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto"
-          >
+  data-quiz-sheet
+  initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+  className="fixed inset-x-0 bottom-0 z-[10001] bg-white rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto"
+>
             <div className="sticky top-0 bg-white border-b border-black/5 px-6 py-4 flex items-center justify-between">
               <h4 className="font-serif-display text-2xl">Your estimate summary</h4>
               <button onClick={() => setShowDetails(false)}><X className="h-5 w-5" /></button>
@@ -298,13 +318,13 @@ function Results({ answers, estimate, onBookConsultation, onClose }) {
               <SummaryRow label="Area" value={answers.area || answers.location?.area} />
               <SummaryRow label="Scope items" value={(answers.scope_items || []).join(', ') || '—'} />
               <SummaryRow label="Budget indicated" value={answers.budget_range} />
-              <SummaryRow label="Package tier" value={estimate.packageTier} />
+              <SummaryRow label="Package" value={answers.package_tier} />
               <SummaryRow label="Possession" value={answers.possession_timeline} />
               <SummaryRow label="Language" value={answers.preferred_language} />
               <SummaryRow label="Consultation" value={answers.consultation_mode} />
               <SummaryRow label="Preferred date" value={answers.preferred_date} />
               <SummaryRow label="Preferred time" value={answers.preferred_time} />
-              <SummaryRow label="Estimated range" value={`${formatLakh(estimate.min)} – ${formatLakh(estimate.max)}`} />
+              <SummaryRow label="Estimated budget" value={formatLakh(estimate.min)}/>
             </div>
           </motion.div>
         )}
@@ -334,7 +354,37 @@ export default function EstimateQuiz({ source = 'cta', onClose }) {
   const s = QUIZ_STEPS[step]
   const pct = done ? 100 : Math.round(((step) / total) * 100)
 
-  useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = '' } }, [])
+  useEffect(() => {
+  const scrollY = window.scrollY
+
+  // Wait for Lenis to be available then stop it
+  const stopLenis = () => {
+    if (window.__lenis) {
+      window.__lenis.stop()
+      return true
+    }
+    return false
+  }
+
+  // Try immediately, then keep trying every 100ms until it works
+  if (!stopLenis()) {
+    const interval = setInterval(() => {
+      if (stopLenis()) clearInterval(interval)
+    }, 100)
+    setTimeout(() => clearInterval(interval), 3000)
+  }
+
+  // Also lock native scroll as backup
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+
+  return () => {
+    document.documentElement.style.overflow = ''
+    document.body.style.overflow = ''
+    if (window.__lenis) window.__lenis.start()
+    window.scrollTo(0, scrollY)
+  }
+}, [])
 
   const setAnswer = (id, v) => setAnswers((a) => ({ ...a, [id]: v }))
 
@@ -343,7 +393,7 @@ export default function EstimateQuiz({ source = 'cta', onClose }) {
     const v = answers[s.id]
     if (s.type === 'single' || s.type === 'pills') return !!v
     if (s.type === 'multi') return Array.isArray(v) && v.length > 0
-    if (s.type === 'location') return v && v.area && v.pincode && v.pincode.length >= 4
+    if (s.type === 'location') return v && v.area
     if (s.type === 'floorplan') return v && v.has
     if (s.type === 'schedule') return v && v.date && v.time
     if (s.type === 'contact') {
@@ -371,39 +421,66 @@ export default function EstimateQuiz({ source = 'cta', onClose }) {
     const floor = answers.floor_plan || {}
     const sched = answers.schedule || {}
 
-    const payload = {
-      name: contact.name,
-      phone: contact.phone,
-      email: contact.email,
-      area: location.area || '',
-      pincode: location.pincode || '',
-      project_type: answers.project_type || '',
-      home_type: answers.home_type || '',
-      bhk_type: answers.bhk_type || '',
-      scope_items: answers.scope_items || [],
-      budget_range: answers.budget_range || '',
-      possession_timeline: answers.possession_timeline || '',
-      has_floor_plan: floor.has === 'yes',
-      floor_plan_url: '', // TODO: wire up upload later
-      preferred_language: answers.preferred_language || '',
-      consultation_mode: answers.consultation_mode || '',
-      preferred_date: sched.date || '',
-      preferred_time: sched.time || '',
-      source,
-      page_url: typeof window !== 'undefined' ? window.location.pathname : '',
-      referral_code: typeof window !== 'undefined' ? (localStorage.getItem('yf_referral_code') || '') : '',
-    }
-
     setSubmitting(true)
+    setError('')
+
     try {
+      // Step 1 — upload floor plan file if provided
+      let floor_plan_url = ''
+      if (floor.has === 'yes' && floor.file) {
+        const formData = new FormData()
+        formData.append('file', floor.file)
+        try {
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          })
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json()
+            floor_plan_url = uploadData.url || ''
+          }
+        } catch {
+          // Upload failed — continue without floor plan URL
+          console.warn('Floor plan upload failed, continuing without it')
+        }
+      }
+
+      // Step 2 — submit lead
+      const payload = {
+  name: contact.name,
+  phone: contact.phone,
+  email: contact.email,
+  area: location.area || '',
+  pincode: location.pincode || '',
+  project_type: answers.project_type || '',
+  home_type: answers.home_type || '',
+  bhk_type: answers.bhk_type || '',
+  package_tier: answers.package_tier || 'essential',
+  scope_items: answers.scope_items || [],
+  budget_range: answers.budget_range || '',
+  possession_timeline: answers.possession_timeline || '',
+  has_floor_plan: floor.has === 'yes',
+  floor_plan_url,
+  preferred_language: answers.preferred_language || '',
+  consultation_mode: answers.consultation_mode || '',
+  preferred_date: sched.date || '',
+  preferred_time: sched.time || '',
+  source,
+  page_url: typeof window !== 'undefined' ? window.location.pathname : '',
+  referral_code: typeof window !== 'undefined' ? (localStorage.getItem('yf_referral_code') || '') : '',
+}
+
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Something went wrong'); setSubmitting(false); return }
-      // Prefer server-side estimate; fall back to local calc
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong')
+        setSubmitting(false)
+        return
+      }
       const est = data.estimate || calculateEstimate(payload)
       setEstimate(est)
       setDone(true)
@@ -476,7 +553,13 @@ export default function EstimateQuiz({ source = 'cta', onClose }) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 md:px-8 h-16 border-b border-black/5">
         <div className="font-serif-display text-xl md:text-2xl">
-          <span>YOU</span><span className="text-[#F47B20] italic">FIRST</span>
+          <Image
+            src="/brand/logo.png"
+            alt="3 Bricks Interiors"
+            width={160}
+            height={10}
+            className="h-21 w-auto mb-4"
+          />
         </div>
         <div className="text-xs text-black/50">{done ? 'Complete' : `Step ${step + 1} of ${total}`}</div>
         <button onClick={onClose} className="h-10 w-10 flex items-center justify-center hover:bg-black/5 rounded-full" aria-label="Close">
@@ -486,7 +569,7 @@ export default function EstimateQuiz({ source = 'cta', onClose }) {
 
       {/* Body */}
       {!done ? (
-        <div className="flex-1 overflow-y-auto">
+        <div id="quiz-modal-body" data-lenis-prevent className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}

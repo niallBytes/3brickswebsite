@@ -1,7 +1,7 @@
 'use client'
 
 // =============================================================================
-// You First — Enhanced Floating WhatsApp Button
+// 3 Bricks — Enhanced Floating WhatsApp Button
 // On click, shows a small popup with two options:
 //   1) Chat on WhatsApp (opens wa.me)
 //   2) Request a Callback (inline mini lead form)
@@ -29,7 +29,7 @@ export default function WhatsAppButton() {
             style={{ cursor: 'auto' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 bg-[#F5F1EB]">
-              <div className="font-medium text-sm">Talk to You First</div>
+              <div className="font-medium text-sm">Talk to 3 Bricks</div>
               <button onClick={() => { setOpen(false); setTab('menu') }} className="h-7 w-7 rounded-full hover:bg-black/5 flex items-center justify-center"><X className="h-4 w-4" /></button>
             </div>
             <div className="p-4">

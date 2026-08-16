@@ -32,13 +32,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    cursor: none;
   }
 }
 
 /* Smooth scroll via Lenis */
 html.lenis { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; overflow-y: auto; }
 .lenis.lenis-stopped { overflow: hidden; }
 
 /* Custom cursor */
@@ -59,6 +60,7 @@ html.lenis { height: auto; }
   display: flex; align-items: center; justify-content: center;
   color: #F8F5F0;
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  
 }
 .yf-cursor.hover-link { background: #F47B20; border-color: #F47B20; width: 14px; height: 14px; }
 .yf-cursor.hover-image { width: 90px; height: 90px; background: #F47B20; border-color: #F47B20; }
@@ -115,4 +117,8 @@ html.lenis { height: auto; }
 @media (max-width: 768px) {
   * { cursor: auto !important; }
   .yf-cursor { display: none !important; }
+}
+
+* {
+  cursor: none !important;
 }

@@ -18,7 +18,7 @@ const sans = Inter({
 })
 
 export const metadata = {
-  title: 'You First · Boutique Interior Design Studio · Pune',
+  title: '3 Bricks · Boutique Interior Design Studio · Pune',
   description: 'Boutique interior design for Pune homeowners. Personal. Precise. On time. Full home interiors, modular kitchens, bedrooms and commercial projects.',
 }
 

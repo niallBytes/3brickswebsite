@@ -8,6 +8,7 @@
 import Link from 'next/link'
 import { Instagram, Facebook, Youtube, MessageCircle } from 'lucide-react'
 import LeadForm from './LeadForm'
+import Image from 'next/image'
 import { BRAND, AREA_PAGES, DESIGN_CATEGORIES } from '@/lib/content'
 
 export default function SiteFooter() {
@@ -33,7 +34,6 @@ export default function SiteFooter() {
     ['Pricing', '/#pricing'],
     ['Refer a Friend', '/refer-a-friend'],
     ['Free Guide', '/free-guide'],
-    ['Store Locator', '/store-locator'],
     ['Contact Us', '/#contact'],
     ['Privacy Policy', '/privacy-policy'],
     ['Terms & Conditions', '/terms-and-conditions'],
@@ -58,7 +58,13 @@ export default function SiteFooter() {
         <div className="grid md:grid-cols-5 gap-10">
           {/* Brand column */}
           <div className="md:col-span-1">
-            <div className="font-serif-display text-3xl mb-4"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span></div>
+            <Image
+  src="/brand/logo.png"
+  alt="3 Bricks Interiors"
+  width={160}
+  height={10}
+  className="h-21 w-auto mb-4"
+/>
             <p className="text-sm text-cream/60">{BRAND.tagline}</p>
             <div className="mt-4 text-sm text-cream/80 space-y-1">
               <div><a href={`tel:${BRAND.phoneTel}`} data-cursor="link" className="hover:text-[#F47B20]">{BRAND.phone}</a></div>
@@ -80,7 +86,7 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-14 pt-6 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-cream/50">
-          <div>© {new Date().getFullYear()} You First Interior Design, Pune. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} 3 Bricks Interior Design, Pune. All rights reserved.</div>
           <div>Made with <span className="text-[#F47B20]">♥</span> for Pune homeowners</div>
         </div>
 

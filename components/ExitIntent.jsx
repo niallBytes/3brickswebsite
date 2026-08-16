@@ -1,7 +1,7 @@
 'use client'
 
 // =============================================================================
-// You First — Exit Intent + Timed Popup
+// 3 Bricks — Exit Intent + Timed Popup
 // Shows once per session. Triggered by:
 //   - Desktop: mouse leaving through the top of the viewport
 //   - Mobile: after 40 seconds on page

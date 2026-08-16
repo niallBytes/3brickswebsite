@@ -9,7 +9,7 @@ import SiteFooter from '@/components/SiteFooter'
 import { DESIGN_CATEGORIES } from '@/lib/content'
 
 export const metadata = {
-  title: 'Design Ideas & Inspiration for Pune Homes | You First',
+  title: 'Design Ideas & Inspiration for Pune Homes | 3 Bricks',
   description: 'Browse hundreds of interior design ideas across kitchens, wardrobes, bedrooms, living rooms and more — curated for Pune homeowners.',
 }
 
@@ -28,7 +28,7 @@ export default function DesignIdeasHub() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {DESIGN_CATEGORIES.map((c) => (
               <Link key={c.slug} href={`/design-ideas/${c.slug}`} className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-neutral-800" data-cursor="image" data-cursor-label={c.short}>
-                {/* Replace with actual You First project photos */}
+                {/* Replace with actual 3 Bricks project photos */}
                 <img src={c.hero} alt={c.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5">

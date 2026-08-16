@@ -12,7 +12,7 @@ import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import { CheckCircle2, Download, BookOpen } from 'lucide-react'
 
-const GUIDE_PDF_URL = '#' // TODO: Replace with actual PDF file once created
+const GUIDE_PDF_URL = '/brand/logo.png' // TODO: Replace with actual PDF file once created
 
 export default function FreeGuidePage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', website: '' })
@@ -43,7 +43,7 @@ export default function FreeGuidePage() {
         <section className="max-w-[1200px] mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <div className="text-xs tracking-[0.3em] uppercase text-[#F47B20] mb-4">— Free Download</div>
-            <h1 className="font-serif-display text-4xl md:text-6xl leading-tight">The Pune Homeowner’s <span className="italic text-[#F47B20]">Interior Design Guide 2025</span></h1>
+            <h1 className="font-serif-display text-4xl md:text-6xl leading-tight">The Pune Homeowner’s <span className="italic text-[#F47B20]">Interior Design Guide 2026</span></h1>
             <p className="mt-5 text-black/70 text-lg max-w-lg">Everything you need to know before designing your home — timelines, costs, questions to ask, red flags to avoid. Free.</p>
             <ul className="mt-6 space-y-2 text-sm text-black/70">
               <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#F47B20]" /> Realistic timelines from possession to move-in</li>

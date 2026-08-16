@@ -7,9 +7,11 @@
 // Guide Downloads, Referrals.
 // =============================================================================
 
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Lock, RefreshCw, LogOut, Search, Download, Users, Sparkles, Calendar, BookOpen } from 'lucide-react'
+import SiteChrome from '@/components/SiteChrome'
 import { AREAS } from '@/lib/content'
+import Image from 'next/image'
 
 const STATUSES = ['new', 'called', 'consultation_scheduled', 'proposal_sent', 'closed_won', 'closed_lost']
 const BHKS = ['1BHK', '2BHK', '3BHK', '4BHK', '5BHK+']
@@ -54,6 +56,51 @@ function AdminPage() {
     const data = await fetch(`/api/admin/leads?${q.toString()}`).then(r => r.json())
     if (!data.error) { setLeads(data.leads || []); setLeadsMeta({ total: data.total, page: data.page, perPage: data.perPage }) }
   }
+
+  const deleteLead = async (id) => {
+  if (!confirm('Are you sure you want to delete this lead? This cannot be undone.')) {
+    return
+  }
+
+  try {
+    const res = await fetch(
+      `/api/admin/leads/${id}?password=${encodeURIComponent(password)}`,
+      {
+        method: 'DELETE',
+      }
+    )
+
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to delete lead')
+    }
+
+    setLeads(prev => prev.filter(l => l.id !== id))
+
+    if (expanded === id) {
+      setExpanded(null)
+    }
+
+    setLeadsMeta(prev => ({
+      ...prev,
+      total: Math.max(0, prev.total - 1),
+    }))
+
+    setStats(prev =>
+      prev
+        ? {
+            ...prev,
+            total: Math.max(0, prev.total - 1),
+          }
+        : prev
+    )
+  } catch (err) {
+    console.error('Delete lead error:', err)
+    alert(err.message || 'Failed to delete lead. Please try again.')
+  }
+}
+
   async function loadDownloads(pwd = password) {
     const data = await fetch(`/api/admin/guide-downloads?password=${encodeURIComponent(pwd)}`).then(r => r.json())
     if (!data.error) setDownloads(data.downloads || [])
@@ -70,6 +117,43 @@ function AdminPage() {
     })
     loadLeads()
   }
+
+  async function markLeadAsRead(id) {
+  try {
+    const res = await fetch(
+      `/api/admin/leads/${id}/read?password=${encodeURIComponent(password)}`,
+      {
+        method: 'POST',
+      }
+    )
+
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      console.error('Failed to mark lead as read:', data.error)
+      return
+    }
+
+    // Update the lead locally immediately
+    setLeads(prev =>
+      prev.map(lead =>
+        lead.id === id ? { ...lead, read: true } : lead
+      )
+    )
+
+    // Update dashboard unread count
+    setStats(prev =>
+      prev
+        ? {
+            ...prev,
+            newLeads: Math.max(0, (prev.newLeads || 0) - 1),
+          }
+        : prev
+    )
+  } catch (err) {
+    console.error('Failed to mark lead as read:', err)
+  }
+}
 
   function exportCsv() {
     const rows = [
@@ -91,11 +175,12 @@ function AdminPage() {
   // ---- Auth screen ----
   if (!authed) {
     return (
+      <SiteChrome>
       <div className="min-h-screen bg-cream flex items-center justify-center px-6">
         <form onSubmit={(e) => { e.preventDefault(); loadAll(password) }} className="w-full max-w-sm bg-white rounded-lg p-8 shadow-xl border border-black/5">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#F47B20] text-white flex items-center justify-center"><Lock className="h-5 w-5" /></div>
-            <div><div className="font-serif-display text-2xl">You First Admin</div><div className="text-xs text-black/50">Dashboard access</div></div>
+            <div><div className="font-serif-display text-2xl">3 Bricks Admin</div><div className="text-xs text-black/50">Dashboard access</div></div>
           </div>
           <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-black/15 rounded-md px-4 py-3 focus:border-[#F47B20] focus:outline-none" autoFocus />
           {error && <div className="text-sm text-red-600 mt-3">{error}</div>}
@@ -103,14 +188,22 @@ function AdminPage() {
           <p className="text-xs text-black/40 mt-4 text-center">Change the password anytime in <code>.env</code> \u2192 <code>ADMIN_PASSWORD</code>.</p>
         </form>
       </div>
+      </SiteChrome>
     )
   }
 
   return (
+    <SiteChrome>
     <div className="min-h-screen bg-cream text-[#1E1E1E]">
       <header className="bg-white border-b border-black/5 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="font-serif-display text-2xl"><span>YOU</span><span className="text-[#F47B20] italic">FIRST</span> \u00b7 Admin</div>
+          <div className="font-serif-display text-2xl"><Image
+            src="/brand/logo.png"
+            alt="3 Bricks Interiors"
+            width={160}
+            height={10}
+            className="h-21 w-auto mb-4"
+          />  Admin</div>
           <div className="flex items-center gap-3">
             <button onClick={() => loadAll(password)} className="px-4 py-2 text-sm border border-black/10 rounded-full hover:border-[#F47B20] hover:text-[#F47B20] inline-flex items-center gap-2"><RefreshCw className="h-4 w-4" />Refresh</button>
             <button onClick={() => { sessionStorage.removeItem('yf_admin'); setAuthed(false); setPassword('') }} className="px-4 py-2 text-sm text-black/60 hover:text-red-600 inline-flex items-center gap-2"><LogOut className="h-4 w-4" />Sign Out</button>
@@ -191,28 +284,64 @@ function AdminPage() {
                     <th className="text-left px-4 py-3">Budget</th>
                     <th className="text-left px-4 py-3">Consultation</th>
                     <th className="text-left px-4 py-3">Source</th>
+                    <th className="text-left px-4 py-3">Referral</th>
                     <th className="text-left px-4 py-3">Estimate</th>
                     <th className="text-left px-4 py-3">Status</th>
+                    <th className="text-left px-4 py-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leads.length === 0 && (<tr><td colSpan="9" className="px-4 py-16 text-center text-black/40">No leads match your filter.</td></tr>)}
                   {leads.map(l => (
-                    <>
-                      <tr key={l.id} className="border-t border-black/5 hover:bg-cream/40 cursor-pointer" onClick={() => setExpanded(expanded === l.id ? null : l.id)}>
+                    <React.Fragment key={l.id}>
+                      <tr
+  className={`border-t border-black/5 hover:bg-cream/40 cursor-pointer ${
+    !l.read ? 'bg-[#F47B20]/[0.04]' : ''
+  }`}
+  onClick={() => {
+    const isOpening = expanded !== l.id
+
+    setExpanded(expanded === l.id ? null : l.id)
+
+    if (isOpening && !l.read) {
+      markLeadAsRead(l.id)
+    }
+  }}
+>
                         <td className="px-4 py-3 whitespace-nowrap text-black/70">{new Date(l.created_at).toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-3 font-medium">{l.name}</td>
+                        <td className="px-4 py-3 font-medium">
+  <div className="flex items-center gap-2">
+    {!l.read && (
+      <span
+        className="w-2 h-2 rounded-full bg-[#F47B20] shrink-0"
+        title="Unread"
+      />
+    )}
+    <span className={!l.read ? 'font-semibold' : ''}>
+      {l.name}
+    </span>
+  </div>
+</td>
                         <td className="px-4 py-3"><a href={`tel:${l.phone}`} onClick={e => e.stopPropagation()} className="text-[#F47B20] hover:underline">{l.phone}</a></td>
                         <td className="px-4 py-3">{l.area || '\u2014'} / {l.bhk_type || '\u2014'}</td>
                         <td className="px-4 py-3">{l.budget_range || '\u2014'}</td>
                         <td className="px-4 py-3 text-black/60">{l.preferred_date ? `${l.preferred_date} ${l.preferred_time || ''}` : '\u2014'}<div className="text-[11px] text-black/40">{l.consultation_mode || ''}</div></td>
                         <td className="px-4 py-3"><span className="text-[11px] bg-black/[0.05] rounded-full px-2 py-1">{l.source || 'unknown'}</span></td>
+                        <td className="px-4 py-3">{l.referral_code ? <span className="text-[11px] bg-[#F47B20]/10 text-[#F47B20] rounded-full px-2 py-1 font-medium">{l.referral_code}</span> : <span className="text-black/30">—</span>}</td>
                         <td className="px-4 py-3 text-green-700 font-medium">{l.estimated_range_min ? `\u20b9${Math.round(l.estimated_range_min/100000)}L\u2013\u20b9${Math.round(l.estimated_range_max/100000)}L` : '\u2014'}</td>
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           <select value={l.status} onChange={(e) => updateStatus(l.id, e.target.value)} className="border border-black/15 rounded-md px-2 py-1 text-xs bg-white">
                             {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
                           </select>
                         </td>
+                        <td className="px-4 py-3">
+  <button
+    onClick={(e) => { e.stopPropagation(); deleteLead(l.id) }}
+    className="text-red-400 hover:text-red-600 transition-colors text-xs font-medium px-2 py-1 rounded hover:bg-red-50"
+  >
+    Delete
+  </button>
+</td>
                       </tr>
                       {expanded === l.id && (
                         <tr className="bg-black/[0.02] border-t border-black/5">
@@ -230,11 +359,33 @@ function AdminPage() {
                               <Row label="Page URL">{l.page_url || '\u2014'}</Row>
                               <Row label="Referral">{l.referral_code || '\u2014'}</Row>
                               <Row label="Package tier">{l.package_tier || '\u2014'}</Row>
+                              {l.referral_code && (
+  <div className="col-span-3 mt-3 pt-3 border-t border-black/5 flex items-center justify-between">
+    <div className="text-xs">
+      <span className="text-black/40 uppercase tracking-wider">Referred by: </span>
+      <span className="font-medium text-[#F47B20]">{l.referral_code}</span>
+    </div>
+    <button
+      onClick={async () => {
+        await fetch(`/api/referrals/${l.referral_code}/reward?password=${encodeURIComponent(password)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: l.id })
+        })
+        alert('Referral marked as rewarded! Remember to send the Amazon voucher to the referrer.')
+        loadLeads()
+      }}
+      className="text-xs bg-green-600 text-white px-4 py-1.5 rounded-full hover:bg-green-700 transition-colors"
+    >
+      Mark Project Started — Trigger Reward
+    </button>
+  </div>
+)}
                             </div>
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -275,6 +426,7 @@ function AdminPage() {
         )}
       </main>
     </div>
+    </SiteChrome>
   )
 }
 

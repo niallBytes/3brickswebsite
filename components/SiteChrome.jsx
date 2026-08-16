@@ -22,17 +22,17 @@ function CustomCursor() {
   const [label, setLabel] = useState('View')
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    
     const el = ref.current; if (!el) return
-    let x = window.innerWidth / 2, y = window.innerHeight / 2
-    let tx = x, ty = y
+    let x = -100, y = -100
+let tx = -100, ty = -100
     const move = (e) => { tx = e.clientX; ty = e.clientY }
     let raf
     const loop = () => {
-      x += (tx - x) * 0.2; y += (ty - y) * 0.2
-      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
-      raf = requestAnimationFrame(loop)
-    }
+  x += (tx - x) * 0.2; y += (ty - y) * 0.2
+  el.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`
+  raf = requestAnimationFrame(loop)
+}
     window.addEventListener('mousemove', move); raf = requestAnimationFrame(loop)
     const over = (e) => {
       const t = e.target.closest('[data-cursor]')
@@ -49,7 +49,7 @@ function CustomCursor() {
     document.addEventListener('mouseover', over)
     return () => { window.removeEventListener('mousemove', move); document.removeEventListener('mouseover', over); cancelAnimationFrame(raf) }
   }, [])
-  return <div ref={ref} className={`yf-cursor ${state} ${onDark ? 'on-dark' : ''}`}><span className="label">{label}</span></div>
+  return <div ref={ref} aria-hidden="true" className={`yf-cursor ${state} ${onDark ? 'on-dark' : ''}`}><span className="label">{label}</span></div>
 }
 
 export default function SiteChrome({ children }) {
@@ -71,10 +71,16 @@ export default function SiteChrome({ children }) {
       const mod = await import('lenis')
       const Lenis = mod.default
       lenis = new Lenis({ duration: 1.1, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true })
+      // Store on window so other components (quiz modal) can stop/start it
+      window.__lenis = lenis
       const loop = (t) => { lenis.raf(t); raf = requestAnimationFrame(loop) }
       raf = requestAnimationFrame(loop)
     })()
-    return () => { if (lenis) lenis.destroy(); if (raf) cancelAnimationFrame(raf) }
+    return () => {
+      if (lenis) lenis.destroy()
+      if (raf) cancelAnimationFrame(raf)
+      window.__lenis = null
+    }
   }, [])
 
   return (
@@ -82,7 +88,7 @@ export default function SiteChrome({ children }) {
       <CustomCursor />
       {children}
       <ExitIntent />
-      <WhatsAppButton />
+      {!pathname.startsWith('/admin') && <WhatsAppButton />}
     </>
   )
 }

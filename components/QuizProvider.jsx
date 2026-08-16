@@ -1,9 +1,9 @@
 'use client'
 
 // =============================================================================
-// You First — Quiz Provider
+// 3 Bricks — Quiz Provider
 // Global context that lets ANY component call `openQuiz(source?)` to open the
-// 12-step estimate quiz overlay. Also exposes helper open() for ExitIntent, etc.
+// Estimate quiz overlay. Also exposes helper open() for ExitIntent, etc.
 // =============================================================================
 
 import { createContext, useCallback, useContext, useState } from 'react'
