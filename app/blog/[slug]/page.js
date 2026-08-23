@@ -48,7 +48,7 @@ export default function BlogPost() {
             <div className="text-xs tracking-[0.3em] uppercase text-[#F47B20] my-6">{post.category}</div>
             <h1 className="font-serif-display text-3xl sm:text-4xl md:text-6xl leading-tight">{post.title}</h1>
             <div className="mt-6 flex items-center gap-4 text-sm text-black/50">
-              <div>By You First Design Team</div><span>·</span>
+              <div>By 3 Bricks Design Team</div><span>·</span>
               <div>{new Date(post.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div><span>·</span>
               <div>{post.readTime} min read</div>
             </div>

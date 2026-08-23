@@ -40,7 +40,7 @@ A free consultation is an opportunity for our designer to understand your space 
   },
   {
     title: '4. Intellectual Property',
-    content: `All content on this website — including text, images, design concepts, layout, graphics, and project photographs — is the intellectual property of You First Interior Design unless otherwise stated.
+    content: `All content on this website — including text, images, design concepts, layout, graphics, and project photographs — is the intellectual property of 3 Bricks Interior Design unless otherwise stated.
 
 You may not reproduce, copy, distribute, or use any content from this website without prior written permission from 3 Bricks Interior Design.
 

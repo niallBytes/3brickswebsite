@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function RefCode() {
   const { code } = useParams()

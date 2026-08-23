@@ -40,7 +40,7 @@ export default function AboutPage() {
                 Founded on one belief
               </h2>
               <p className="text-black/70 leading-relaxed mb-5">
-                3 Bricks was built because Ryan and Akash believed the interior design industry in Pune was broken.
+                3 Bricks was built because our team believed the interior design industry in Pune was broken.
                 Big brands promised beautiful homes and delivered assembly-line products. Clients were passed between
                 rotating designers, surprised by hidden costs, and left waiting months past promised deadlines.
               </p>

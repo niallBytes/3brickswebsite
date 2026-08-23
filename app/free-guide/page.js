@@ -12,7 +12,7 @@ import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import { CheckCircle2, Download, BookOpen } from 'lucide-react'
 
-const GUIDE_PDF_URL = '/brand/logo.png' // TODO: Replace with actual PDF file once created
+const GUIDE_PDF_URL = '/brand/free-guide.pdf' // TODO: Replace with actual PDF file once created
 
 export default function FreeGuidePage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', website: '' })

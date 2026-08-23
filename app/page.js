@@ -593,109 +593,194 @@ function BeforeAfterSection() {
   )
 }
 
-/* Testimonials — infinite auto-scroll carousel with dots + hover pause + touch swipe */
-const TESTS = [
-  { q: "They actually finished on time. After hearing horror stories from neighbours at other brands, this was unreal. Weekly updates, no excuses.", n: 'Rohan & Priya Desai', t: '3BHK Full Interior · Baner' },
-  { q: "My designer was the same person from day one to handover. No account managers, no rotating juniors. That mattered more than I expected.", n: 'Anjali Kulkarni', t: 'Modular Kitchen · Wakad' },
-  { q: "Every rupee accounted for. No 'small surprises' at the end. Warm, honest team. Highly recommend to anyone new in Pune.", n: 'Sameer Joshi', t: 'Full Home · Kharadi' },
-  { q: "We were dreading the renovation after horror stories from friends. You First made it feel effortless. Genuinely warm people.", n: 'Meera & Arjun Patil', t: '2BHK Interior · Hinjewadi' },
-  { q: "The 3D render was exactly what we got. Not 80%. Not 'close enough'. Exactly. That is unheard of in this industry.", n: 'Karthik Menon', t: 'Bedroom Suite · Viman Nagar' },
-  { q: "They handled our government office tender end-to-end. Clean paperwork, on-time delivery, no wobbles. Truly professional.", n: 'Mr. Deshpande', t: 'Government Office · Pune' },
+const TESTIMONIALS = [
+  {
+    name: 'Rohan & Priya Desai',
+    location: '3BHK Full Interior · Baner, Pune',
+    initial: 'R',
+    stars: 5,
+    text: 'We had a terrible experience with a large branded company — delayed by 3 months, upselling at every step. 3 Bricks was the complete opposite. Timeline was met, budget respected, and the designer was always reachable.',
+  },
+  {
+    name: 'Anjali Kulkarni',
+    location: 'Modular Kitchen · Wakad, Pune',
+    initial: 'A',
+    stars: 5,
+    text: 'The modular kitchen is exactly what I wanted — and they actually listened when I said I hate deep cabinets. Small thing, but nobody else asked. Quality of materials is noticeably better than what the big companies showed us.',
+  },
+  {
+    name: 'Sameer Joshi',
+    location: 'Full Home · Kharadi, Pune',
+    initial: 'S',
+    stars: 5,
+    text: 'Got possession in March, moved in by June. That was the plan and they stuck to it. The Japandi theme came out exactly like the 3D render. Very happy with the whole experience.',
+  },
+  {
+    name: 'Mehta Family',
+    location: '2BHK Interiors · Hinjewadi, Pune',
+    initial: 'M',
+    stars: 5,
+    text: 'Ryan and team were professional throughout. The false ceiling and lighting design especially came out beautifully. Would recommend 3 Bricks to anyone getting possession in Hinjewadi.',
+  },
+  {
+    name: 'Prashant Nair',
+    location: 'Office Interior · Viman Nagar, Pune',
+    initial: 'P',
+    stars: 5,
+    text: 'Got our startup office done in 21 days. Clean modern design, within budget, zero delays. Our team loves the space. 3 Bricks delivered exactly what they promised.',
+  },
+  {
+    name: 'Sunita & Vikram',
+    location: '3BHK Full Interior · Balewadi, Pune',
+    initial: 'S',
+    stars: 5,
+    text: 'We were nervous about hiring a local studio over a big brand but 3 Bricks completely changed our mind. Personal attention, honest pricing, beautiful result. Could not be happier.',
+  },
 ]
-
-function TestimonialCard({ t }) {
-  return (
-    <div className="relative bg-white border border-black/5 rounded-md p-7 md:p-8 shrink-0 w-[85vw] sm:w-[380px] md:w-[420px] snap-center transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl"
-         data-cursor="link">
-      <div className="absolute top-2 right-4 font-serif-display text-[120px] leading-none text-[#F47B20]/10 select-none">&ldquo;</div>
-      <div className="flex gap-1 mb-4">
-        {[0,1,2,3,4].map(k => <Star key={k} className="h-4 w-4 fill-[#F47B20] text-[#F47B20]" />)}
-      </div>
-      <p className="font-serif-display italic text-lg md:text-xl leading-snug text-black/85 min-h-[160px]">&ldquo;{t.q}&rdquo;</p>
-      <div className="mt-6 h-[1px] bg-black/10" />
-      <div className="mt-4">
-        <div className="font-medium">{t.n}</div>
-        <div className="text-sm text-black/50">{t.t}</div>
-      </div>
-    </div>
-  )
-}
 
 function Testimonials() {
   const trackRef = useRef(null)
-  const [active, setActive] = useState(0)
-  const dragState = useRef({ startX: 0, startScroll: 0, dragging: false })
+  const animRef = useRef(null)
+  const posRef = useRef(0)
+  const pausedRef = useRef(false)
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
+  const dragStartPos = useRef(0)
 
-  // Scroll to active card when it changes (via arrows or dots)
+  // Clone cards for seamless infinite loop
+  const cards = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS]
+
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
-    const card = track.querySelector(`[data-idx="${active}"]`)
-    if (card) track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.clientWidth) / 2, behavior: 'smooth' })
-  }, [active])
 
-  // Update active based on user scroll (drag / swipe)
-  const onScroll = () => {
+    const cardWidth = 380 + 24 // card width + gap
+    const totalWidth = cardWidth * TESTIMONIALS.length
+    const speed = 0.6 // px per frame — adjust for faster/slower
+
+    const animate = () => {
+      if (!pausedRef.current && !isDragging.current) {
+        posRef.current += speed
+        // Reset position seamlessly when one full set has scrolled
+        if (posRef.current >= totalWidth) {
+          posRef.current -= totalWidth
+        }
+        track.style.transform = `translateX(-${posRef.current}px)`
+      }
+      animRef.current = requestAnimationFrame(animate)
+    }
+
+    animRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animRef.current)
+  }, [])
+
+  // Pause on hover
+  const handleMouseEnter = () => { pausedRef.current = true }
+  const handleMouseLeave = () => {
+    if (!isDragging.current) pausedRef.current = false
+  }
+
+  // Mouse drag
+  const handleMouseDown = (e) => {
+    isDragging.current = true
+    pausedRef.current = true
+    dragStartX.current = e.clientX
+    dragStartPos.current = posRef.current
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return
+    const diff = dragStartX.current - e.clientX
+    posRef.current = dragStartPos.current + diff
     const track = trackRef.current
-    if (!track) return
-    const center = track.scrollLeft + track.clientWidth / 2
-    let closest = 0, best = Infinity
-    track.querySelectorAll('[data-idx]').forEach((c) => {
-      const cCenter = c.offsetLeft + c.clientWidth / 2
-      const d = Math.abs(cCenter - center)
-      if (d < best) { best = d; closest = Number(c.getAttribute('data-idx')) }
-    })
-    if (closest !== active) setActive(closest)
+    if (track) track.style.transform = `translateX(-${posRef.current}px)`
   }
 
-  const onPointerDown = (e) => {
-    const track = trackRef.current; if (!track) return
-    dragState.current = { startX: e.clientX ?? e.touches?.[0]?.clientX ?? 0, startScroll: track.scrollLeft, dragging: true }
+  const handleMouseUp = () => {
+    isDragging.current = false
+    pausedRef.current = false
   }
-  const onPointerMove = (e) => {
-    if (!dragState.current.dragging) return
-    const track = trackRef.current; if (!track) return
-    const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0
-    track.scrollLeft = dragState.current.startScroll - (x - dragState.current.startX)
-  }
-  const onPointerUp = () => { dragState.current.dragging = false }
 
-  const goPrev = () => setActive((a) => (a - 1 + TESTS.length) % TESTS.length)
-  const goNext = () => setActive((a) => (a + 1) % TESTS.length)
+  // Touch drag
+  const handleTouchStart = (e) => {
+    isDragging.current = true
+    pausedRef.current = true
+    dragStartX.current = e.touches[0].clientX
+    dragStartPos.current = posRef.current
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return
+    const diff = dragStartX.current - e.touches[0].clientX
+    posRef.current = dragStartPos.current + diff
+    const track = trackRef.current
+    if (track) track.style.transform = `translateX(-${posRef.current}px)`
+  }
+
+  const handleTouchEnd = () => {
+    isDragging.current = false
+    pausedRef.current = false
+  }
 
   return (
-    <section className="py-24 md:py-32 bg-cream">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10 mb-10 md:mb-14 flex items-end justify-between gap-4">
-        <div>
-          <div className="text-xs tracking-[0.3em] uppercase text-black/50 mb-4">— Kind Words</div>
-          <h2 className="font-serif-display text-4xl sm:text-5xl md:text-7xl">From <span className="italic text-[#F47B20]">Pune Homes</span></h2>
-        </div>
-        {/* Arrow controls */}
-        <div className="hidden md:flex items-center gap-2">
-          <button onClick={goPrev} aria-label="Previous testimonial" data-cursor="link" className="h-12 w-12 rounded-full border border-black/15 hover:border-[#F47B20] hover:text-[#F47B20] flex items-center justify-center min-h-[44px]"><ArrowLeft className="h-5 w-5" /></button>
-          <button onClick={goNext} aria-label="Next testimonial" data-cursor="link" className="h-12 w-12 rounded-full border border-black/15 hover:border-[#F47B20] hover:text-[#F47B20] flex items-center justify-center min-h-[44px]"><ArrowRight className="h-5 w-5" /></button>
-        </div>
+    <section className="py-24 md:py-32 bg-white overflow-hidden">
+      <div className="px-6 md:px-10 max-w-[1400px] mx-auto mb-12">
+        <div className="text-xs tracking-[0.3em] uppercase text-black/40 mb-4">— Client Stories</div>
+        <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl">
+          What Pune <span className="italic text-[#F47B20]">homeowners say</span>
+        </h2>
       </div>
+
+      {/* Carousel */}
       <div
-        ref={trackRef}
-        onScroll={onScroll}
-        onMouseDown={onPointerDown}
-        onMouseMove={onPointerMove}
-        onMouseUp={onPointerUp}
-        onTouchStart={onPointerDown}
-        onTouchMove={onPointerMove}
-        onTouchEnd={onPointerUp}
-        className="flex gap-5 md:gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth px-6 md:px-16 py-4 cursor-grab active:cursor-grabbing"
+        className="relative select-none"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: isDragging.current ? 'grabbing' : 'grab' }}
       >
-        {TESTS.map((t, i) => (<div key={i} data-idx={i}><TestimonialCard t={t} /></div>))}
-      </div>
-      <div className="flex justify-center gap-2 mt-8">
-        {TESTS.map((_, i) => (
-          <button key={i} onClick={() => setActive(i)} aria-label={`Show testimonial ${i+1}`}
-            className={`h-2 rounded-full transition-all duration-500 min-h-[44px] min-w-[44px] md:min-h-[8px] md:min-w-[8px] flex items-center justify-center`} data-cursor="link">
-            <span className={`block h-2 rounded-full transition-all ${i === active ? 'w-8 bg-[#F47B20]' : 'w-2 bg-black/20 hover:bg-black/40'}`} />
-          </button>
-        ))}
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+        <div
+          ref={trackRef}
+          className="flex gap-6 will-change-transform"
+          style={{ width: 'max-content', transform: 'translateX(0px)' }}
+        >
+          {cards.map((t, i) => (
+            <div
+              key={i}
+              className="w-[380px] flex-shrink-0 border border-black/8 rounded-2xl p-8 bg-white hover:border-[#F47B20]/30 hover:shadow-xl transition-all duration-300"
+            >
+              {/* Stars */}
+              <div className="flex gap-1 mb-4">
+                {Array.from({ length: t.stars }).map((_, si) => (
+                  <span key={si} className="text-[#F47B20] text-base">★</span>
+                ))}
+              </div>
+              {/* Quote mark */}
+              <div className="font-serif-display text-6xl text-[#F47B20]/15 leading-none mb-2">"</div>
+              {/* Text */}
+              <p className="text-black/65 text-sm leading-relaxed italic mb-6">{t.text}</p>
+              {/* Divider */}
+              <div className="border-t border-black/8 pt-5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F47B20] to-[#D9631A] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {t.initial}
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-[#1E1E1E]">{t.name}</div>
+                  <div className="text-xs text-black/50 mt-0.5">{t.location}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
