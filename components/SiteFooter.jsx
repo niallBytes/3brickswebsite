@@ -81,7 +81,7 @@ export default function SiteFooter() {
 
           <FooterCol title="Services" items={services.map(([l, h]) => ({ label: l, href: h }))} />
           <FooterCol title="Design Ideas" items={ideas.map(c => ({ label: c.short, href: `/design-ideas/${c.slug}` })).concat([{ label: 'View All →', href: '/design-ideas' }])} />
-          <FooterCol title="Areas in Pune" items={AREA_PAGES.map(a => ({ label: a.name, href: `/interior-designer-${a.slug}-pune` })).concat([{ label: 'View All Areas →', href: '/areas-we-serve' }])} />
+          <FooterCol title="Areas in Pune" items={AREA_PAGES.map(a => ({ label: a.name, href: `/interior-designer-${a.slug}-pune` }))} />
           <FooterCol title="Company" items={company.map(([l, h]) => ({ label: l, href: h }))} />
         </div>
 
